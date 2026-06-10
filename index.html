@@ -17,6 +17,10 @@
     <span class="label">BEAT</span>
     <span id="goal">0</span>
   </div>
+  <div class="chip hidden" id="timeChip" title="Time remaining">
+    <span class="label">TIME</span>
+    <span id="timeLeft">60</span>
+  </div>
   <div class="chip" title="Fruit eaten">
     <svg width="15" height="15" viewBox="0 0 20 20"><circle cx="10" cy="11" r="7.5" fill="var(--fruit)"/><circle cx="7.5" cy="8.8" r="2" fill="#fff" opacity=".55"/><path d="M10 4.5 Q10.5 2 13 1.8 Q12.8 4.4 10 4.5" fill="var(--fruit-leaf)"/></svg>
     <span id="score">0</span>
@@ -39,11 +43,13 @@
     <p>a cozy little snake game</p>
     <div class="note hidden" id="challengeNote"></div>
     <div class="opts">
-      <div class="opt-row">
+      <div class="opt-row wide">
         <div class="label">mood</div>
         <div class="pills" data-group="mode">
           <button class="pill" data-v="classic">classic</button>
           <button class="pill" data-v="zen">zen</button>
+          <button class="pill" data-v="rush">rush</button>
+          <button class="pill" data-v="trial">trial</button>
         </div>
       </div>
       <div class="opt-row">
@@ -84,6 +90,42 @@
           <button class="pill dot" data-v="classic" title="classic" style="background:#aad751"></button>
           <button class="pill dot" data-v="sakura" title="sakura" style="background:#e8aec4"></button>
           <button class="pill dot" data-v="tide" title="tide" style="background:#5fa8a0"></button>
+        </div>
+      </div>
+      <div class="opt-row">
+        <div class="label">snake</div>
+        <div class="pills" id="skinPills">
+          <button class="pill dot" data-skin="drift" style="background:linear-gradient(135deg,#8fa3e0,#b3a7e6)"></button>
+          <button class="pill dot" data-skin="sunset" style="background:linear-gradient(135deg,#f2a36b,#ef8f86)"></button>
+          <button class="pill dot" data-skin="dragon" style="background:linear-gradient(135deg,#e87fa8,#c86fc9)"></button>
+          <button class="pill dot" data-skin="retro" style="background:linear-gradient(135deg,#58b368,#9ed36a)"></button>
+          <button class="pill dot" data-skin="galaxy" style="background:linear-gradient(135deg,#5c6bc0,#9575cd)"></button>
+          <button class="pill dot" data-skin="deepsea" style="background:linear-gradient(135deg,#26818e,#4ab3a8)"></button>
+        </div>
+      </div>
+      <div class="opt-row wide">
+        <div class="label">hat</div>
+        <div class="pills" id="hatPills">
+          <button class="pill" data-hat="none">none</button>
+          <button class="pill" data-hat="sprout">sprout</button>
+          <button class="pill" data-hat="crown">crown</button>
+          <button class="pill" data-hat="flower">flower</button>
+          <button class="pill" data-hat="chef">chef</button>
+          <button class="pill" data-hat="halo">halo</button>
+        </div>
+      </div>
+      <div class="opt-row">
+        <div class="label">ambience</div>
+        <div class="pills" data-group="ambience">
+          <button class="pill" data-v="on">on</button>
+          <button class="pill" data-v="off">off</button>
+        </div>
+      </div>
+      <div class="opt-row">
+        <div class="label">rain</div>
+        <div class="pills" data-group="rain">
+          <button class="pill" data-v="off">off</button>
+          <button class="pill" data-v="on">on</button>
         </div>
       </div>
       <div class="opt-row wide">
@@ -131,7 +173,14 @@
   </div>
 </div>
 
-<p class="hint"><kbd>↑←↓→</kbd> / <kbd>wasd</kbd> move &nbsp;·&nbsp; <kbd>space</kbd> pause</p>
+<div class="garden-wrap hidden" id="gardenWrap">
+  <canvas id="garden"></canvas>
+  <div class="garden-label" id="gardenLabel"></div>
+</div>
+
+<p class="hint"><kbd>↑←↓→</kbd> / <kbd>wasd</kbd> move &nbsp;·&nbsp; <kbd>space</kbd> pause &nbsp;·&nbsp; <kbd>h</kbd> hide ui</p>
+
+<div class="toast" id="toast"></div>
 
 <script src="audio.js"></script>
 <script src="game.js"></script>

@@ -12,63 +12,136 @@
   const START_LEN = 4;
   const BONUS_MS = 5000;
   const BONUS_GAP_MIN = 4, BONUS_GAP_SPAN = 4;   // bonus appears every 4-7 fruits
+  const TRIAL_MS = 60000;
+  const MODES = ['classic', 'zen', 'rush', 'trial'];
 
   const THEMES = {
     meadow: {
       bg: '#f4efe7', bgDeep: '#ece5d8', boardA: '#dcead8', boardB: '#d2e3cd',
-      snakeA: '#8fa3e0', snakeB: '#b3a7e6', snakeHead: '#7b90d6',
       fruit: '#ef9486', fruitHi: '#f7c1b8', leaf: '#88b884', stem: '#a98f6b',
-      bonus: '#f2b76d', bonusRing: '#e8a35c',
+      bonusRing: '#e8a35c',
       ink: '#6f665b', inkSoft: '#a99e8f', card: '#fffdf8',
       eyeW: '#ffffff', eyeP: '#4d4a63', tongue: '#e58a9b', dead: '#b9b2a6',
       ghost: 'rgba(111,102,91,.28)', overlay: 'rgba(244,239,231,.82)',
+      uiSnakeA: '#8fa3e0', uiSnakeB: '#b3a7e6',
     },
     midnight: {
       bg: '#211f2b', bgDeep: '#181621', boardA: '#2a2837', boardB: '#252333',
-      snakeA: '#8fa3e0', snakeB: '#c3a7e6', snakeHead: '#7b90d6',
       fruit: '#ef9486', fruitHi: '#f7c1b8', leaf: '#88b884', stem: '#b89f7c',
-      bonus: '#f2b76d', bonusRing: '#e8a35c',
+      bonusRing: '#e8a35c',
       ink: '#d9d3c8', inkSoft: '#8d879c', card: '#2e2c3a',
       eyeW: '#ffffff', eyeP: '#2b2939', tongue: '#e58a9b', dead: '#5a5766',
       ghost: 'rgba(230,225,240,.25)', overlay: 'rgba(26,24,34,.82)',
+      uiSnakeA: '#8fa3e0', uiSnakeB: '#c3a7e6',
     },
     classic: {
       bg: '#f3f6ef', bgDeep: '#e4ebdc', boardA: '#aad751', boardB: '#a2d149',
-      snakeA: '#4775ea', snakeB: '#6f9bff', snakeHead: '#3f63d6',
       fruit: '#e7471d', fruitHi: '#f5856b', leaf: '#3faa49', stem: '#7a5230',
-      bonus: '#ffb13b', bonusRing: '#e89a23',
+      bonusRing: '#e89a23',
       ink: '#3c4043', inkSoft: '#7d8288', card: '#ffffff',
       eyeW: '#ffffff', eyeP: '#3a3a3a', tongue: '#d96d7c', dead: '#9aa0a6',
       ghost: 'rgba(40,44,47,.28)', overlay: 'rgba(243,246,239,.85)',
+      uiSnakeA: '#4775ea', uiSnakeB: '#6f9bff',
     },
     sakura: {
       bg: '#fbf1f3', bgDeep: '#f1dfe6', boardA: '#f4dde4', boardB: '#eed2dc',
-      snakeA: '#d98aa8', snakeB: '#b78bc9', snakeHead: '#c97797',
       fruit: '#f2a06b', fruitHi: '#f8c9a8', leaf: '#94b87e', stem: '#a98f6b',
-      bonus: '#f5c46a', bonusRing: '#e2ad4e',
+      bonusRing: '#d886a8',
       ink: '#7a5f68', inkSoft: '#b393a0', card: '#fffafb',
       eyeW: '#ffffff', eyeP: '#544049', tongue: '#e58a9b', dead: '#c2b3b9',
       ghost: 'rgba(122,95,104,.26)', overlay: 'rgba(251,241,243,.84)',
+      uiSnakeA: '#d98aa8', uiSnakeB: '#b78bc9',
     },
     tide: {
       bg: '#eef4f4', bgDeep: '#dcebe9', boardA: '#d6e9e6', boardB: '#c9e0dd',
-      snakeA: '#5fa8a0', snakeB: '#8ec3b0', snakeHead: '#4f968e',
       fruit: '#ef9486', fruitHi: '#f7c1b8', leaf: '#88b884', stem: '#a98f6b',
-      bonus: '#f2b76d', bonusRing: '#e8a35c',
+      bonusRing: '#5b8fb0',
       ink: '#4f6868', inkSoft: '#8aa6a3', card: '#fcfefe',
       eyeW: '#ffffff', eyeP: '#37504e', tongue: '#e58a9b', dead: '#a8b8b5',
       ghost: 'rgba(79,104,104,.26)', overlay: 'rgba(238,244,244,.84)',
+      uiSnakeA: '#5fa8a0', uiSnakeB: '#8ec3b0',
     },
+  };
+
+  // each palette has its own timed fruit
+  const FRUIT_KIND = { meadow: 'orange', sakura: 'dragonfruit', classic: 'kiwi', midnight: 'starfruit', tide: 'blueberry' };
+  const FRUIT_NAME = { orange: 'oranges', dragonfruit: 'dragon fruit', kiwi: 'kiwis', starfruit: 'starfruit', blueberry: 'blueberries' };
+
+  // ---------- skins & hats ----------
+  const SKINS = {
+    drift:   { a: '#8fa3e0', b: '#b3a7e6', head: '#7b90d6' },
+    sunset:  { a: '#f2a36b', b: '#ef8f86', head: '#e08a52', unlock: { timed: 'meadow', n: 20 },   hint: 'eat 20 oranges in meadow' },
+    dragon:  { a: '#e87fa8', b: '#c86fc9', head: '#d96a97', unlock: { timed: 'sakura', n: 20 },   hint: 'eat 20 dragon fruit in sakura' },
+    retro:   { a: '#58b368', b: '#9ed36a', head: '#46a356', unlock: { timed: 'classic', n: 20 },  hint: 'eat 20 kiwis in classic' },
+    galaxy:  { a: '#5c6bc0', b: '#9575cd', head: '#4a58a8', unlock: { timed: 'midnight', n: 20 }, hint: 'eat 20 starfruit in midnight' },
+    deepsea: { a: '#26818e', b: '#4ab3a8', head: '#1f6f7b', unlock: { timed: 'tide', n: 20 },     hint: 'eat 20 blueberries in tide' },
+  };
+  const HATS = {
+    none:   { label: 'none' },
+    sprout: { label: 'sprout', unlock: { stat: 'fruitTotal', n: 100 }, hint: 'eat 100 fruit (lifetime)' },
+    crown:  { label: 'crown',  unlock: { stat: 'ghostWins', n: 1 },    hint: 'outrun your ghost' },
+    flower: { label: 'flower', unlock: { stat: 'fruitTotal', n: 500 }, hint: 'eat 500 fruit (lifetime)' },
+    chef:   { label: 'chef',   unlock: { stat: 'perfect', n: 10 },     hint: 'catch 10 timed fruit at full value' },
+    halo:   { label: 'halo',   unlock: { stat: 'clutch', n: 100 },     hint: 'catch 100 timed fruit with 1s left' },
   };
 
   // ---------- settings ----------
   const DEFAULTS = {
     mode: 'classic', pace: 'normal', size: 'normal', layout: 'wide',
-    theme: 'meadow', fruits: 'single', sfxVol: 0.8, musicVol: 0.5,
+    theme: 'meadow', fruits: 'single', ambience: 'on', rain: 'off',
+    sfxVol: 0.8, musicVol: 0.5,
   };
   let settings = { ...DEFAULTS };
   try { Object.assign(settings, JSON.parse(localStorage.getItem('drift-settings') || '{}')); } catch (e) {}
   const saveSettings = () => localStorage.setItem('drift-settings', JSON.stringify(settings));
+
+  // ---------- progression ----------
+  const PROG_DEFAULT = {
+    fruitTotal: 0,
+    timed: { meadow: 0, sakura: 0, classic: 0, midnight: 0, tide: 0 },
+    clutch: 0, perfect: 0, ghostWins: 0,
+    skins: ['drift'], hats: [], skin: 'drift', hat: 'none',
+  };
+  let prog = { ...PROG_DEFAULT, timed: { ...PROG_DEFAULT.timed }, skins: ['drift'], hats: [] };
+  try {
+    const s = JSON.parse(localStorage.getItem('drift-progress') || 'null');
+    if (s) {
+      Object.assign(prog, s);
+      prog.timed = { ...PROG_DEFAULT.timed, ...(s.timed || {}) };
+      prog.skins = Array.isArray(s.skins) && s.skins.length ? s.skins : ['drift'];
+      prog.hats = Array.isArray(s.hats) ? s.hats : [];
+    }
+  } catch (e) {}
+  if (!prog.skins.includes('drift')) prog.skins.unshift('drift');
+  if (!prog.skins.includes(prog.skin)) prog.skin = 'drift';
+  if (prog.hat !== 'none' && !prog.hats.includes(prog.hat)) prog.hat = 'none';
+  const saveProg = () => localStorage.setItem('drift-progress', JSON.stringify(prog));
+
+  function unlockMet(u) {
+    if (!u) return true;
+    if (u.timed) return (prog.timed[u.timed] || 0) >= u.n;
+    return (prog[u.stat] || 0) >= u.n;
+  }
+  function checkUnlocks() {
+    let changed = false;
+    for (const k in SKINS) {
+      if (!prog.skins.includes(k) && unlockMet(SKINS[k].unlock)) {
+        prog.skins.push(k);
+        toast('new snake unlocked · ' + k);
+        Sound.unlock();
+        changed = true;
+      }
+    }
+    for (const k in HATS) {
+      if (k !== 'none' && !prog.hats.includes(k) && unlockMet(HATS[k].unlock)) {
+        prog.hats.push(k);
+        toast('new hat unlocked · ' + k);
+        Sound.unlock();
+        changed = true;
+      }
+    }
+    if (changed) { saveProg(); refreshWardrobe(); }
+  }
 
   let PAL = THEMES[settings.theme] || THEMES.meadow;
   function applyTheme() {
@@ -77,27 +150,30 @@
     r.setProperty('--bg', PAL.bg);
     r.setProperty('--bg-deep', PAL.bgDeep);
     r.setProperty('--board-a', PAL.boardA);
-    r.setProperty('--snake-a', PAL.snakeA);
-    r.setProperty('--snake-b', PAL.snakeB);
+    r.setProperty('--snake-a', PAL.uiSnakeA);
+    r.setProperty('--snake-b', PAL.uiSnakeB);
     r.setProperty('--fruit', PAL.fruit);
     r.setProperty('--fruit-leaf', PAL.leaf);
     r.setProperty('--ink', PAL.ink);
     r.setProperty('--ink-soft', PAL.inkSoft);
     r.setProperty('--card', PAL.card);
     r.setProperty('--overlay-bg', PAL.overlay);
+    Sound.setMood(settings.theme);
   }
 
   // ---------- run state ----------
-  let cols = 17, rows = 13, cell = 32, stepMs = 135, ttlTicks = 37;
+  let cols = 17, rows = 13, cell = 32, stepMs = 135, ttlTicks = 37, trialTicks = 444;
   let player = null;
   let ghost = null;           // {sim, moves, idx, score, diedAt}
   let recMoves = [];
   let runSeed = 0;
   let challenge = null;       // {seed, goal}
   let state = 'menu';         // menu | ready | playing | paused | dying | gameover
+  let endCause = 'death';     // death | time
   let dirQueue = [];
   let acc = 0, lastTime = 0, dieAt = 0;
   let particles = [], popups = [], eatRipple = null;
+  let ambient = [], ambTimer = 0;
   let lastBonusSecs = null;
   let muted = localStorage.getItem('drift-muted') === '1';
 
@@ -108,6 +184,21 @@
   const overlays = { menu: $('menu'), ready: $('ready'), paused: $('paused'), gameover: $('gameover') };
   function showOverlay(name) {
     for (const k in overlays) overlays[k].classList.toggle('show', k === name);
+  }
+
+  // ---------- toasts ----------
+  let toastQ = [], toastBusy = false;
+  function toast(msg) { toastQ.push(msg); pumpToast(); }
+  function pumpToast() {
+    if (toastBusy || !toastQ.length) return;
+    toastBusy = true;
+    const el = $('toast');
+    el.textContent = toastQ.shift();
+    el.classList.add('show');
+    setTimeout(() => {
+      el.classList.remove('show');
+      setTimeout(() => { toastBusy = false; pumpToast(); }, 350);
+    }, 2400);
   }
 
   // ---------- rng & sim ----------
@@ -121,7 +212,6 @@
   }
   const randomSeed = () => (Math.random() * 4294967296) >>> 0;
   const seedStr = s => s.toString(36);
-
   const gapRoll = rng => BONUS_GAP_MIN + Math.floor(rng() * BONUS_GAP_SPAN);
 
   function freeCell(sim) {
@@ -136,23 +226,31 @@
     return free[Math.floor(sim.rng() * free.length)];
   }
 
+  function newFruit(sim) {
+    const c = freeCell(sim);
+    if (!c) return null;
+    return settings.mode === 'rush' ? { x: c.x, y: c.y, ticksLeft: ttlTicks } : { x: c.x, y: c.y };
+  }
+
   function makeSim(seed) {
     const sim = {
       rng: mulberry32(seed),
       snake: [], dir: { x: 1, y: 0 }, prevTail: null,
       fruits: [], bonus: null, bonusIn: 0,
-      score: 0, alive: true,
+      score: 0, alive: true, ticks: 0,
     };
     const cy = Math.floor(rows / 2), cx = Math.floor(cols / 4);
     for (let i = 0; i < START_LEN; i++) sim.snake.push({ x: cx - i, y: cy });
     const n = FRUIT_TARGET[settings.fruits] || 1;
     for (let i = 0; i < n; i++) {
-      const c = freeCell(sim);
-      if (c) sim.fruits.push(c);
+      const f = newFruit(sim);
+      if (f) sim.fruits.push(f);
     }
     sim.bonusIn = gapRoll(sim.rng);
     return sim;
   }
+
+  const timedPts = ticksLeft => Math.max(1, Math.min(5, Math.ceil(ticksLeft * stepMs / 1000)));
 
   // One deterministic step shared by the player and the ghost replay.
   function simStep(sim, ndir) {
@@ -188,34 +286,62 @@
     sim.prevTail = willGrow ? null : sim.snake.pop();
 
     if (fi >= 0) {
-      sim.fruits.splice(fi, 1);
-      sim.score++;
-      ev.ate = { x: nx, y: ny };
-      const c = freeCell(sim);
-      if (c) sim.fruits.push(c);
-      sim.bonusIn--;
-      if (sim.bonusIn <= 0 && !sim.bonus) {
-        const b = freeCell(sim);
-        if (b) {
-          sim.bonus = { x: b.x, y: b.y, ticksLeft: ttlTicks };
-          ev.bonusSpawned = true;
+      const f = sim.fruits.splice(fi, 1)[0];
+      if (settings.mode === 'rush') {
+        const pts = timedPts(f.ticksLeft);
+        sim.score += pts;
+        ev.bonus = { x: nx, y: ny, pts };
+      } else {
+        sim.score++;
+        ev.ate = { x: nx, y: ny };
+      }
+      const nf = newFruit(sim);
+      if (nf) sim.fruits.push(nf);
+      if (settings.mode !== 'rush') {
+        sim.bonusIn--;
+        if (sim.bonusIn <= 0 && !sim.bonus) {
+          const b = freeCell(sim);
+          if (b) {
+            sim.bonus = { x: b.x, y: b.y, ticksLeft: ttlTicks };
+            ev.bonusSpawned = true;
+          }
+          sim.bonusIn = gapRoll(sim.rng);
         }
-        sim.bonusIn = gapRoll(sim.rng);
       }
     }
 
     if (hitBonus) {
-      const pts = Math.max(1, Math.min(5, Math.ceil(sim.bonus.ticksLeft * stepMs / 1000)));
+      const pts = timedPts(sim.bonus.ticksLeft);
       sim.score += pts;
       ev.bonus = { x: nx, y: ny, pts };
       sim.bonus = null;
     } else if (sim.bonus) {
       sim.bonus.ticksLeft--;
       if (sim.bonus.ticksLeft <= 0) {
+        ev.bonusExpired = { x: sim.bonus.x, y: sim.bonus.y };
         sim.bonus = null;
-        ev.bonusExpired = true;
       }
     }
+
+    if (settings.mode === 'rush') {
+      const expired = [];
+      for (let i = sim.fruits.length - 1; i >= 0; i--) {
+        const f = sim.fruits[i];
+        f.ticksLeft--;
+        if (f.ticksLeft <= 0) {
+          expired.push({ x: f.x, y: f.y });
+          sim.fruits.splice(i, 1);
+        }
+      }
+      for (let i = 0; i < expired.length; i++) {
+        const nf = newFruit(sim);
+        if (nf) sim.fruits.push(nf);
+      }
+      if (expired.length) ev.expired = expired;
+    }
+
+    sim.ticks++;
+    if (settings.mode === 'trial' && sim.ticks >= trialTicks) ev.timeUp = true;
     return ev;
   }
 
@@ -244,12 +370,13 @@
     [cols, rows] = SIZES[settings.layout][settings.size];
     stepMs = SPEEDS[settings.pace];
     ttlTicks = Math.round(BONUS_MS / stepMs);
+    trialTicks = Math.round(TRIAL_MS / stepMs);
     fitCanvas();
   }
   function fitCanvas() {
     const tall = settings.layout === 'tall';
     const maxW = Math.min(window.innerWidth * 0.94, tall ? 430 : 660);
-    const maxH = window.innerHeight * (tall ? 0.74 : 0.66);
+    const maxH = window.innerHeight * (tall ? 0.72 : 0.62);
     cell = Math.max(14, Math.floor(Math.min(maxW / cols, maxH / rows)));
     const w = cols * cell, h = rows * cell;
     const dpr = window.devicePixelRatio || 1;
@@ -258,6 +385,7 @@
     canvas.width = Math.round(w * dpr);
     canvas.height = Math.round(h * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    drawGarden();
   }
 
   // ---------- hud ----------
@@ -266,6 +394,8 @@
     const zen = settings.mode === 'zen';
     $('bestChip').classList.toggle('hidden', zen);
     if (!zen) $('best').textContent = getBest();
+    $('timeChip').classList.toggle('hidden', settings.mode !== 'trial');
+    if (settings.mode === 'trial' && !player) $('timeLeft').textContent = Math.round(TRIAL_MS / 1000);
     $('goalChip').classList.toggle('hidden', !(challenge && challenge.goal));
     if (challenge && challenge.goal) $('goal').textContent = challenge.goal;
   }
@@ -273,6 +403,7 @@
   // ---------- run lifecycle ----------
   function startRun(seed) {
     Sound.ensure();
+    Sound.setRain(settings.rain === 'on');
     if (Sound.musicWanted()) Sound.startMusic();
     configureBoard();
     runSeed = seed;
@@ -280,15 +411,26 @@
     recMoves = [];
     dirQueue = [];
     ghost = null;
-    if (settings.mode === 'classic') {
+    if (settings.mode !== 'zen') {
       const saved = loadRun(seed);
       if (saved && saved.m) ghost = { sim: makeSim(seed), moves: saved.m, idx: 0, score: saved.s, diedAt: 0 };
     }
     particles = []; popups = []; eatRipple = null; lastBonusSecs = null;
     acc = 0;
+    endCause = 'death';
     state = 'ready';
     updateScoreUI();
     showOverlay('ready');
+  }
+
+  function onTimedCatch(pts) {
+    prog.timed[settings.theme] = (prog.timed[settings.theme] || 0) + 1;
+    prog.fruitTotal++;
+    if (pts >= 5) prog.perfect++;
+    if (pts <= 1) prog.clutch++;
+    saveProg();
+    drawGarden();
+    checkUnlocks();
   }
 
   function tick(now) {
@@ -297,20 +439,33 @@
     recMoves.push(DIRS.findIndex(d => d.x === player.dir.x && d.y === player.dir.y));
 
     if (ev.ate) {
+      prog.fruitTotal++;
+      saveProg();
+      drawGarden();
+      checkUnlocks();
       updateScoreUI();
       Sound.pop(player.score);
       eatRipple = { x: ev.ate.x, y: ev.ate.y, t0: now };
       burst(ev.ate.x, ev.ate.y, [PAL.fruit, PAL.leaf]);
     }
     if (ev.bonusSpawned) Sound.bonusSpawn();
-    if (ev.bonusExpired) Sound.bonusGone();
+    if (ev.bonusExpired) {
+      Sound.bonusGone();
+      burst(ev.bonusExpired.x, ev.bonusExpired.y, [PAL.inkSoft]);
+    }
+    if (ev.expired) {
+      Sound.bonusGone();
+      for (const e of ev.expired) burst(e.x, e.y, [PAL.inkSoft]);
+    }
     if (ev.bonus) {
       updateScoreUI();
       Sound.bonusEat(ev.bonus.pts);
-      burst(ev.bonus.x, ev.bonus.y, [PAL.bonus, PAL.bonusRing, PAL.fruitHi]);
+      burst(ev.bonus.x, ev.bonus.y, [PAL.bonusRing, PAL.fruitHi]);
       popups.push({ x: (ev.bonus.x + 0.5) * cell, y: ev.bonus.y * cell, text: '+' + ev.bonus.pts, t0: now });
+      onTimedCatch(ev.bonus.pts);
     }
-    if (ev.died) return die();
+    if (ev.died) return endRun('death');
+    if (ev.timeUp) return endRun('time');
 
     if (ghost && ghost.sim.alive && ghost.idx < ghost.moves.length) {
       simStep(ghost.sim, DIRS[+ghost.moves[ghost.idx++]]);
@@ -318,14 +473,21 @@
     }
   }
 
-  function die() {
+  function endRun(cause) {
+    endCause = cause;
     state = 'dying';
     dieAt = performance.now();
-    Sound.die();
+    if (cause === 'death') Sound.die(); else Sound.timeUp();
+
     const prevBest = getBest();
     if (player.score > prevBest) localStorage.setItem(bestKey(), player.score);
     const saved = loadRun(runSeed);
     if (!saved || player.score > saved.s) saveRun(runSeed, player.score, recMoves.join(''));
+    if (ghost && player.score > ghost.score) {
+      prog.ghostWins++;
+      saveProg();
+      checkUnlocks();
+    }
     updateScoreUI();
 
     setTimeout(() => {
@@ -335,7 +497,8 @@
       $('goTitle').textContent =
         beatGoal ? 'challenge beaten!' :
         beatGhost ? 'ghost outrun!' :
-        player.score > prevBest && player.score > 0 ? 'new best!' : 'oh well';
+        player.score > prevBest && player.score > 0 ? 'new best!' :
+        cause === 'time' ? 'time!' : 'oh well';
       $('goScore').textContent = player.score;
       $('goBest').textContent = 'best ' + getBest() + ' · seed ' + seedStr(runSeed);
       const ch = !!challenge;
@@ -408,6 +571,7 @@
       if (state === 'playing') { state = 'paused'; Sound.pause(); showOverlay('paused'); }
       else if (state === 'paused') { state = 'playing'; lastTime = 0; showOverlay(null); }
     }
+    if (k === 'h') document.body.classList.toggle('cinema');
     if (k === 'Enter' && state === 'gameover') $('againBtn').click();
   });
 
@@ -427,6 +591,7 @@
   }, { passive: true });
 
   document.addEventListener('visibilitychange', () => {
+    if (window.__drift && window.__drift.noAutoPause) return;
     if (document.hidden && state === 'playing') { state = 'paused'; showOverlay('paused'); }
   });
 
@@ -443,10 +608,49 @@
       sync();
       Sound.ui();
       if (g === 'theme') applyTheme();
+      if (g === 'rain') Sound.setRain(settings.rain === 'on');
       configureBoard();
       updateScoreUI();
     });
     sync();
+  });
+
+  // wardrobe (skins & hats live in progression, not settings)
+  function refreshWardrobe() {
+    document.querySelectorAll('#skinPills .pill').forEach(p => {
+      const k = p.dataset.skin;
+      const locked = !prog.skins.includes(k);
+      p.classList.toggle('locked', locked);
+      p.classList.toggle('active', !locked && prog.skin === k);
+      p.title = locked ? '🔒 ' + (SKINS[k].hint || '') : k;
+    });
+    document.querySelectorAll('#hatPills .pill').forEach(p => {
+      const k = p.dataset.hat;
+      const locked = k !== 'none' && !prog.hats.includes(k);
+      p.classList.toggle('locked', locked);
+      p.classList.toggle('active', !locked && prog.hat === k);
+      p.title = locked ? '🔒 ' + (HATS[k].hint || '') : HATS[k].label;
+    });
+  }
+  $('skinPills').addEventListener('click', e => {
+    const b = e.target.closest('.pill');
+    if (!b) return;
+    const k = b.dataset.skin;
+    if (!prog.skins.includes(k)) { toast('locked · ' + SKINS[k].hint); return; }
+    prog.skin = k;
+    saveProg();
+    refreshWardrobe();
+    Sound.ui();
+  });
+  $('hatPills').addEventListener('click', e => {
+    const b = e.target.closest('.pill');
+    if (!b) return;
+    const k = b.dataset.hat;
+    if (k !== 'none' && !prog.hats.includes(k)) { toast('locked · ' + HATS[k].hint); return; }
+    prog.hat = k;
+    saveProg();
+    refreshWardrobe();
+    Sound.ui();
   });
 
   for (const [id, key] of [['musicVol', 'musicVol'], ['sfxVol', 'sfxVol']]) {
@@ -463,7 +667,7 @@
   $('playBtn').addEventListener('click', () => startRun(challenge ? challenge.seed : randomSeed()));
   $('againBtn').addEventListener('click', () => startRun(challenge ? challenge.seed : randomSeed()));
   $('raceBtn').addEventListener('click', () => startRun(runSeed));
-  $('menuBtn').addEventListener('click', () => {
+  function backToMenu() {
     if (challenge) {
       challenge = null;
       history.replaceState(null, '', location.pathname);
@@ -473,16 +677,12 @@
     state = 'menu';
     configureBoard();
     updateScoreUI();
+    refreshWardrobe();
     showOverlay('menu');
-  });
+  }
+  $('menuBtn').addEventListener('click', backToMenu);
   $('resumeBtn').addEventListener('click', () => { state = 'playing'; lastTime = 0; showOverlay(null); });
-  $('pauseMenuBtn').addEventListener('click', () => {
-    player = null; ghost = null;
-    state = 'menu';
-    configureBoard();
-    updateScoreUI();
-    showOverlay('menu');
-  });
+  $('pauseMenuBtn').addEventListener('click', backToMenu);
 
   $('shareBtn').addEventListener('click', () => {
     const u = new URL(location.origin + location.pathname);
@@ -521,7 +721,7 @@
     const q = new URLSearchParams(location.search);
     if (!q.get('seed')) return;
     const valid = {
-      m: ['classic', 'zen'], p: Object.keys(SPEEDS),
+      m: MODES, p: Object.keys(SPEEDS),
       s: ['small', 'normal', 'large'], l: ['wide', 'tall'], f: Object.keys(FRUIT_TARGET),
     };
     for (const [param, key] of [['m', 'mode'], ['p', 'pace'], ['s', 'size'], ['l', 'layout'], ['f', 'fruits']]) {
@@ -536,7 +736,7 @@
     note.classList.remove('hidden');
   })();
 
-  // ---------- render ----------
+  // ---------- render helpers ----------
   const lerp = (a, b, t) => a + (b - a) * t;
   const center = c => ({ x: (c.x + 0.5) * cell, y: (c.y + 0.5) * cell });
 
@@ -555,15 +755,20 @@
       }
   }
 
-  function drawFruitAt(fx, fy, now) {
+  // ---------- fruit drawing ----------
+  function fruitShadow(cx, cy, r) {
+    ctx.fillStyle = 'rgba(0,0,0,.10)';
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + cell * 0.30, r * 0.8, r * 0.3, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  function drawApple(fx, fy, now) {
     const c = center({ x: fx, y: fy });
     const bob = Math.sin(now / 320 + fx * 1.7 + fy) * cell * 0.045;
     const r = cell * 0.31;
     const y = c.y + bob;
-    ctx.fillStyle = 'rgba(0,0,0,.10)';
-    ctx.beginPath();
-    ctx.ellipse(c.x, c.y + cell * 0.30, r * 0.8, r * 0.3, 0, 0, Math.PI * 2);
-    ctx.fill();
+    fruitShadow(c.x, c.y, r);
     ctx.fillStyle = PAL.fruit;
     ctx.beginPath();
     ctx.arc(c.x, y, r, 0, Math.PI * 2);
@@ -585,40 +790,87 @@
     ctx.fill();
   }
 
-  function drawBonus(b, now) {
-    const c = center(b);
-    const frac = Math.max(0, b.ticksLeft / ttlTicks);
-    const secs = Math.max(1, Math.ceil(b.ticksLeft * stepMs / 1000));
-    const pulse = secs <= 1 ? 1 + Math.sin(now / 70) * 0.08 : 1;
-    const r = cell * 0.33 * pulse;
-
-    if (state === 'playing') {
-      if (lastBonusSecs !== null && secs < lastBonusSecs && secs <= 3) Sound.bonusTick();
-      lastBonusSecs = secs;
+  function starPath(cx, cy, ro, ri, n) {
+    ctx.beginPath();
+    for (let i = 0; i < n * 2; i++) {
+      const r = i % 2 ? ri : ro;
+      const a = -Math.PI / 2 + (i * Math.PI) / n;
+      const x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r;
+      if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y);
     }
+    ctx.closePath();
+  }
 
-    ctx.fillStyle = 'rgba(0,0,0,.10)';
-    ctx.beginPath();
-    ctx.ellipse(c.x, c.y + cell * 0.32, r * 0.8, r * 0.3, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = PAL.bonus;
-    ctx.beginPath();
-    ctx.arc(c.x, c.y, r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = PAL.fruitHi;
-    ctx.beginPath();
-    ctx.arc(c.x - r * 0.3, c.y - r * 0.3, r * 0.28, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = PAL.leaf;
-    ctx.beginPath();
-    ctx.ellipse(c.x + r * 0.35, c.y - r * 1.05, r * 0.38, r * 0.18, -0.5, 0, Math.PI * 2);
-    ctx.fill();
+  function drawTimedFruit(kind, fx, fy, now, frac, secs, pulse) {
+    const c = center({ x: fx, y: fy });
+    const k = pulse ? 1 + Math.sin(now / 70) * 0.08 : 1;
+    const r = cell * 0.33 * k;
+    fruitShadow(c.x, c.y, r);
+
+    if (kind === 'orange') {
+      ctx.fillStyle = '#f2a64b';
+      ctx.beginPath(); ctx.arc(c.x, c.y, r, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#f8cd8e';
+      ctx.beginPath(); ctx.arc(c.x - r * 0.3, c.y - r * 0.3, r * 0.28, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#88b884';
+      ctx.beginPath(); ctx.ellipse(c.x + r * 0.35, c.y - r * 1.05, r * 0.38, r * 0.18, -0.5, 0, Math.PI * 2); ctx.fill();
+    } else if (kind === 'dragonfruit') {
+      ctx.fillStyle = '#e8508d';
+      ctx.beginPath(); ctx.ellipse(c.x, c.y, r * 0.85, r, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#f6a8c8';
+      ctx.beginPath(); ctx.arc(c.x - r * 0.25, c.y - r * 0.3, r * 0.25, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#7fb069';
+      for (const [ax, ay, rot] of [[-0.6, -0.55, -2.2], [0.6, -0.55, 2.2], [-0.7, 0.4, -3.6], [0.7, 0.4, 3.6]]) {
+        ctx.save();
+        ctx.translate(c.x + ax * r, c.y + ay * r);
+        ctx.rotate(rot);
+        ctx.beginPath(); ctx.ellipse(0, 0, r * 0.28, r * 0.11, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      }
+    } else if (kind === 'kiwi') {
+      ctx.fillStyle = '#7a5230';
+      ctx.beginPath(); ctx.arc(c.x, c.y, r, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#9bc53d';
+      ctx.beginPath(); ctx.arc(c.x, c.y, r * 0.9, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#e9f5d3';
+      ctx.beginPath(); ctx.arc(c.x, c.y, r * 0.38, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#3a2d1d';
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.arc(c.x + Math.cos(a) * r * 0.58, c.y + Math.sin(a) * r * 0.58, r * 0.06, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else if (kind === 'starfruit') {
+      ctx.fillStyle = 'rgba(244,211,94,.25)';
+      starPath(c.x, c.y, r * 1.35, r * 0.6, 5);
+      ctx.fill();
+      ctx.fillStyle = '#f4d35e';
+      starPath(c.x, c.y, r * 1.05, r * 0.48, 5);
+      ctx.fill();
+      ctx.fillStyle = '#f9e6a0';
+      ctx.beginPath(); ctx.arc(c.x, c.y, r * 0.22, 0, Math.PI * 2); ctx.fill();
+    } else if (kind === 'blueberry') {
+      ctx.fillStyle = '#5c6bc0';
+      ctx.beginPath(); ctx.arc(c.x, c.y, r, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#aab6e8';
+      ctx.beginPath(); ctx.arc(c.x - r * 0.3, c.y - r * 0.3, r * 0.26, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#3d4a8f';
+      ctx.lineWidth = Math.max(1, cell * 0.03);
+      for (let i = 0; i < 5; i++) {
+        const a = -Math.PI / 2 + (i / 5) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(c.x, c.y - r * 0.62);
+        ctx.lineTo(c.x + Math.cos(a) * r * 0.16, c.y - r * 0.62 + Math.sin(a) * r * 0.16 * 0.5);
+        ctx.stroke();
+      }
+    }
 
     ctx.strokeStyle = PAL.bonusRing;
     ctx.lineWidth = Math.max(2, cell * 0.07);
     ctx.lineCap = 'round';
     ctx.beginPath();
-    ctx.arc(c.x, c.y, cell * 0.46, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * frac);
+    ctx.arc(c.x, c.y, cell * 0.46, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.max(0, frac));
     ctx.stroke();
 
     ctx.fillStyle = PAL.ink;
@@ -628,6 +880,7 @@
     ctx.fillText(secs, c.x, c.y - cell * 0.55);
   }
 
+  // ---------- snake drawing ----------
   function snakePath(sim, t) {
     const s = sim.snake;
     const pts = [];
@@ -657,7 +910,7 @@
 
   // split a polyline at wrap jumps, extending the off-board side so the body
   // appears to flow through the edge; tips (head/tail ends) are never extended
-  // past themselves, and a lone tip renders as a dot in drawSnakeBody
+  // past themselves, and a lone tip renders as a dot
   function splitWrapped(pts) {
     const segs = [];
     let cur = [pts[0]];
@@ -677,14 +930,103 @@
     return segs;
   }
 
+  // stroke a polyline as a smooth curve through midpoints (corners rounded)
+  function strokeSmooth(p, width) {
+    if (!p.length) return;
+    ctx.lineWidth = width;
+    if (p.length === 1) {
+      ctx.fillStyle = ctx.strokeStyle;
+      ctx.beginPath();
+      ctx.arc(p[0].x, p[0].y, width / 2, 0, Math.PI * 2);
+      ctx.fill();
+      return;
+    }
+    ctx.beginPath();
+    ctx.moveTo(p[0].x, p[0].y);
+    for (let i = 1; i < p.length - 1; i++) {
+      const mx = (p[i].x + p[i + 1].x) / 2, my = (p[i].y + p[i + 1].y) / 2;
+      ctx.quadraticCurveTo(p[i].x, p[i].y, mx, my);
+    }
+    ctx.lineTo(p[p.length - 1].x, p[p.length - 1].y);
+    ctx.stroke();
+  }
+
+  function drawHat(kind, hx, hy) {
+    const s = cell;
+    ctx.save();
+    ctx.lineCap = 'round';
+    if (kind === 'sprout') {
+      ctx.strokeStyle = '#6da06b';
+      ctx.lineWidth = Math.max(1.5, s * 0.05);
+      ctx.beginPath();
+      ctx.moveTo(hx, hy - s * 0.30);
+      ctx.quadraticCurveTo(hx + s * 0.04, hy - s * 0.45, hx, hy - s * 0.55);
+      ctx.stroke();
+      ctx.fillStyle = '#88b884';
+      ctx.beginPath(); ctx.ellipse(hx - s * 0.09, hy - s * 0.56, s * 0.10, s * 0.05, -0.6, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(hx + s * 0.09, hy - s * 0.60, s * 0.10, s * 0.05, 0.6, 0, Math.PI * 2); ctx.fill();
+    } else if (kind === 'crown') {
+      ctx.fillStyle = '#e9c46a';
+      ctx.beginPath();
+      ctx.moveTo(hx - s * 0.22, hy - s * 0.38);
+      ctx.lineTo(hx - s * 0.22, hy - s * 0.58);
+      ctx.lineTo(hx - s * 0.11, hy - s * 0.46);
+      ctx.lineTo(hx, hy - s * 0.62);
+      ctx.lineTo(hx + s * 0.11, hy - s * 0.46);
+      ctx.lineTo(hx + s * 0.22, hy - s * 0.58);
+      ctx.lineTo(hx + s * 0.22, hy - s * 0.38);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#e76f51';
+      ctx.beginPath(); ctx.arc(hx, hy - s * 0.44, s * 0.035, 0, Math.PI * 2); ctx.fill();
+    } else if (kind === 'flower') {
+      ctx.fillStyle = '#f7d4e0';
+      for (let i = 0; i < 5; i++) {
+        const a = (i / 5) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.arc(hx + Math.cos(a) * s * 0.10, hy - s * 0.50 + Math.sin(a) * s * 0.10, s * 0.075, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = '#f2b76d';
+      ctx.beginPath(); ctx.arc(hx, hy - s * 0.50, s * 0.06, 0, Math.PI * 2); ctx.fill();
+    } else if (kind === 'chef') {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(hx - s * 0.16, hy - s * 0.50, s * 0.32, s * 0.12);
+      for (const ox of [-0.12, 0, 0.12]) {
+        ctx.beginPath();
+        ctx.arc(hx + ox * s, hy - s * 0.55, s * 0.11, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else if (kind === 'halo') {
+      ctx.strokeStyle = '#e9c46a';
+      ctx.lineWidth = Math.max(2, s * 0.06);
+      ctx.beginPath();
+      ctx.ellipse(hx, hy - s * 0.66, s * 0.20, s * 0.07, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
   function drawSnakeBody(sim, t, now, isGhost) {
     const { pts, heads, facing } = snakePath(sim, t);
     const segs = splitWrapped(pts);
-    const dead = !sim.alive || state === 'dying' || state === 'gameover';
+    const dead = endCause === 'death' &&
+      (!sim.alive || ((state === 'dying' || state === 'gameover') && !isGhost));
+    const W = cell * (isGhost ? 0.58 : 0.74);
+    const skin = SKINS[prog.skin] || SKINS.drift;
 
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    ctx.lineWidth = cell * (isGhost ? 0.58 : 0.74);
+
+    // soft shadow under the body
+    if (!isGhost) {
+      ctx.save();
+      ctx.translate(0, cell * 0.10);
+      ctx.strokeStyle = 'rgba(0,0,0,.10)';
+      for (const seg of segs) strokeSmooth(seg, W);
+      ctx.restore();
+    }
+
     if (isGhost) {
       ctx.strokeStyle = PAL.ghost;
     } else if (dead) {
@@ -692,22 +1034,40 @@
     } else {
       const hp = pts[0], tp = pts[pts.length - 1];
       const g = ctx.createLinearGradient(hp.x, hp.y, tp.x, tp.y);
-      g.addColorStop(0, PAL.snakeA);
-      g.addColorStop(1, PAL.snakeB);
+      g.addColorStop(0, skin.a);
+      g.addColorStop(1, skin.b);
       ctx.strokeStyle = g;
     }
-    ctx.fillStyle = ctx.strokeStyle;
+
+    const lastSeg = segs[segs.length - 1];
     for (const seg of segs) {
-      if (seg.length === 1) {
+      if (!isGhost && seg === lastSeg && seg.length >= 4) {
+        // taper the tail over its final two links
+        const body = seg.slice(0, seg.length - 2);
+        strokeSmooth(body, W);
+        const n = seg.length;
         ctx.beginPath();
-        ctx.arc(seg[0].x, seg[0].y, ctx.lineWidth / 2, 0, Math.PI * 2);
-        ctx.fill();
-        continue;
+        ctx.lineWidth = W * 0.60;
+        ctx.moveTo(seg[n - 3].x, seg[n - 3].y);
+        ctx.lineTo(seg[n - 2].x, seg[n - 2].y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.lineWidth = W * 0.42;
+        ctx.moveTo(seg[n - 2].x, seg[n - 2].y);
+        ctx.lineTo(seg[n - 1].x, seg[n - 1].y);
+        ctx.stroke();
+      } else {
+        strokeSmooth(seg, W);
       }
-      ctx.beginPath();
-      ctx.moveTo(seg[0].x, seg[0].y);
-      for (let i = 1; i < seg.length; i++) ctx.lineTo(seg[i].x, seg[i].y);
-      ctx.stroke();
+    }
+
+    // belly stripe
+    if (!isGhost && !dead) {
+      ctx.strokeStyle = 'rgba(255,255,255,.20)';
+      for (const seg of segs) {
+        const body = seg === lastSeg && seg.length >= 4 ? seg.slice(0, seg.length - 2) : seg;
+        if (body.length > 1) strokeSmooth(body, W * 0.28);
+      }
     }
 
     // pick whichever head image is on the board for the face
@@ -723,7 +1083,7 @@
       return;
     }
 
-    ctx.fillStyle = dead ? PAL.dead : PAL.snakeHead;
+    ctx.fillStyle = dead ? PAL.dead : skin.head;
     ctx.beginPath();
     ctx.arc(head.x, head.y, cell * 0.40, 0, Math.PI * 2);
     ctx.fill();
@@ -749,6 +1109,7 @@
       ctx.stroke();
     }
 
+    const blink = !dead && ((now + 1300) % 4100) < 120;
     const eo = cell * 0.17, ef = cell * 0.10, er = cell * 0.115;
     for (const s of [-1, 1]) {
       const ex = head.x + fx * ef + px * eo * s;
@@ -765,6 +1126,13 @@
         ctx.moveTo(ex - k, ey - k); ctx.lineTo(ex + k, ey + k);
         ctx.moveTo(ex + k, ey - k); ctx.lineTo(ex - k, ey + k);
         ctx.stroke();
+      } else if (blink) {
+        ctx.strokeStyle = PAL.eyeP;
+        ctx.lineWidth = Math.max(1.2, cell * 0.04);
+        ctx.beginPath();
+        ctx.moveTo(ex - er * 0.6, ey);
+        ctx.lineTo(ex + er * 0.6, ey);
+        ctx.stroke();
       } else {
         ctx.fillStyle = PAL.eyeP;
         ctx.beginPath();
@@ -772,15 +1140,83 @@
         ctx.fill();
       }
     }
+
+    if (!dead && prog.hat !== 'none') drawHat(prog.hat, head.x, head.y);
   }
 
+  // ---------- ambient particles ----------
+  const AMB_RATE = { meadow: 1600, sakura: 950, midnight: 1700, tide: 1100 };
+  function spawnAmbient(now) {
+    const W = cols * cell, H = rows * cell;
+    const theme = settings.theme;
+    if (theme === 'meadow' || theme === 'sakura') {
+      if (ambient.length >= 12) return;
+      ambient.push({ kind: theme === 'sakura' ? 'petal' : 'leaf', x: Math.random() * W, y: -cell * 0.4, phase: Math.random() * 6.28 });
+    } else if (theme === 'midnight') {
+      if (ambient.filter(a => a.kind === 'firefly').length >= 6) return;
+      ambient.push({ kind: 'firefly', x: Math.random() * W, y: Math.random() * H, phase: Math.random() * 6.28, born: now });
+    } else if (theme === 'tide') {
+      if (ambient.length >= 10) return;
+      ambient.push({ kind: 'bubble', x: Math.random() * W, y: H + cell * 0.3, phase: Math.random() * 6.28, r: cell * (0.05 + Math.random() * 0.08) });
+    }
+  }
+
+  function drawAmbient(now, dt) {
+    if (settings.ambience !== 'on') { ambient = []; return; }
+    const rate = AMB_RATE[settings.theme];
+    if (rate) {
+      ambTimer += dt;
+      if (ambTimer > rate) { ambTimer = 0; spawnAmbient(now); }
+    }
+    const W = cols * cell, H = rows * cell;
+    for (let i = ambient.length - 1; i >= 0; i--) {
+      const a = ambient[i];
+      if (a.kind === 'leaf' || a.kind === 'petal') {
+        a.y += dt * cell * 0.0009;
+        const x = a.x + Math.sin(now / 1100 + a.phase) * cell * 0.5;
+        if (a.y > H + cell * 0.5) { ambient.splice(i, 1); continue; }
+        ctx.save();
+        ctx.translate(x, a.y);
+        ctx.rotate(Math.sin(now / 800 + a.phase) * 0.8);
+        ctx.globalAlpha = 0.7;
+        ctx.fillStyle = a.kind === 'petal' ? '#f3b8cb' : '#9cbf8e';
+        ctx.beginPath();
+        ctx.ellipse(0, 0, cell * 0.14, cell * 0.07, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      } else if (a.kind === 'firefly') {
+        if (now - a.born > 9000) { ambient.splice(i, 1); continue; }
+        a.x += Math.cos(now / 800 + a.phase) * 0.25;
+        a.y += Math.sin(now / 700 + a.phase * 1.7) * 0.25;
+        const glow = 0.35 + 0.35 * Math.sin(now / 300 + a.phase);
+        const fade = Math.min(1, (now - a.born) / 1000, (9000 - (now - a.born)) / 1000);
+        ctx.globalAlpha = glow * fade;
+        ctx.fillStyle = '#f4d35e';
+        ctx.beginPath(); ctx.arc(a.x, a.y, cell * 0.10, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = Math.min(1, glow * fade * 2);
+        ctx.fillStyle = '#f8e9a1';
+        ctx.beginPath(); ctx.arc(a.x, a.y, cell * 0.045, 0, Math.PI * 2); ctx.fill();
+      } else if (a.kind === 'bubble') {
+        a.y -= dt * cell * 0.0007;
+        const x = a.x + Math.sin(now / 600 + a.phase) * cell * 0.15;
+        if (a.y < -cell * 0.3) { ambient.splice(i, 1); continue; }
+        ctx.globalAlpha = 0.4;
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(x, a.y, a.r, 0, Math.PI * 2); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  // ---------- effects ----------
   function drawEffects(now, dt) {
     if (eatRipple) {
       const t = (now - eatRipple.t0) / 380;
       if (t >= 1) eatRipple = null;
       else {
         const rc = center(eatRipple);
-        ctx.strokeStyle = PAL.fruit + '';
+        ctx.strokeStyle = PAL.fruit;
         ctx.globalAlpha = 0.5 * (1 - t);
         ctx.lineWidth = cell * 0.06 * (1 - t) + 1;
         ctx.beginPath();
@@ -816,6 +1252,63 @@
     ctx.globalAlpha = 1;
   }
 
+  // ---------- garden ----------
+  const FLOWER_COLORS = ['#ef9486', '#e8aec4', '#f2b76d', '#b3a7e6', '#8fa3e0', '#f3b8cb'];
+  function drawGarden() {
+    const wrap = $('gardenWrap');
+    if (!wrap) return;
+    const blooms = Math.floor(prog.fruitTotal / 10);
+    wrap.classList.toggle('hidden', blooms === 0);
+    if (!blooms) return;
+    const g = $('garden');
+    const gx = g.getContext('2d');
+    const w = cols * cell, h = 40;
+    const dpr = window.devicePixelRatio || 1;
+    g.style.width = w + 'px';
+    g.style.height = h + 'px';
+    g.width = Math.round(w * dpr);
+    g.height = Math.round(h * dpr);
+    gx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const rng = mulberry32(424242);
+    gx.strokeStyle = 'rgba(140,170,130,.5)';
+    gx.lineWidth = 1.4;
+    gx.lineCap = 'round';
+    for (let i = 0; i < w / 9; i++) {
+      const x = rng() * w, bh = 4 + rng() * 7;
+      gx.beginPath();
+      gx.moveTo(x, h);
+      gx.quadraticCurveTo(x + (rng() - 0.5) * 4, h - bh / 2, x + (rng() - 0.5) * 6, h - bh);
+      gx.stroke();
+    }
+    const fw = 24;
+    const n = Math.min(blooms, Math.floor((w - 16) / fw));
+    for (let i = 0; i < n; i++) {
+      const r = mulberry32(1000 + i * 7919);
+      const x = 12 + i * fw + r() * 8;
+      const stemH = 13 + r() * 12;
+      const color = FLOWER_COLORS[Math.floor(r() * FLOWER_COLORS.length)];
+      gx.strokeStyle = '#7da379';
+      gx.lineWidth = 1.6;
+      gx.beginPath();
+      gx.moveTo(x, h);
+      gx.quadraticCurveTo(x + (r() - 0.5) * 5, h - stemH * 0.6, x, h - stemH);
+      gx.stroke();
+      gx.fillStyle = color;
+      for (let p = 0; p < 5; p++) {
+        const a = (p / 5) * Math.PI * 2 + r();
+        gx.beginPath();
+        gx.arc(x + Math.cos(a) * 3.4, h - stemH + Math.sin(a) * 3.4, 2.6, 0, Math.PI * 2);
+        gx.fill();
+      }
+      gx.fillStyle = '#f8e9a1';
+      gx.beginPath();
+      gx.arc(x, h - stemH, 2, 0, Math.PI * 2);
+      gx.fill();
+    }
+    $('gardenLabel').textContent = `garden · ${blooms} bloom${blooms === 1 ? '' : 's'}`;
+  }
+
   // ---------- main loop ----------
   function frame(now) {
     requestAnimationFrame(frame);
@@ -831,14 +1324,37 @@
       }
     }
 
+    if (settings.mode === 'trial' && player && state !== 'menu') {
+      const remain = Math.max(0, trialTicks * stepMs - (player.ticks * stepMs + (state === 'playing' ? acc : 0)));
+      $('timeLeft').textContent = Math.ceil(remain / 1000);
+    }
+
     const t = state === 'playing' ? Math.min(acc / stepMs, 1) : 1;
     ctx.clearRect(0, 0, cols * cell, rows * cell);
     drawBoard();
+    drawAmbient(now, dt);
 
     if (player) {
-      for (const f of player.fruits) drawFruitAt(f.x, f.y, now);
-      if (player.bonus) drawBonus(player.bonus, now);
-      else lastBonusSecs = null;
+      const kind = FRUIT_KIND[settings.theme] || 'orange';
+      for (const f of player.fruits) {
+        if (f.ticksLeft != null) {
+          const secs = Math.max(1, Math.ceil(f.ticksLeft * stepMs / 1000));
+          drawTimedFruit(kind, f.x, f.y, now, f.ticksLeft / ttlTicks, secs, secs <= 1);
+        } else {
+          drawApple(f.x, f.y, now);
+        }
+      }
+      if (player.bonus) {
+        const b = player.bonus;
+        const secs = Math.max(1, Math.ceil(b.ticksLeft * stepMs / 1000));
+        if (state === 'playing') {
+          if (lastBonusSecs !== null && secs < lastBonusSecs && secs <= 3) Sound.bonusTick();
+          lastBonusSecs = secs;
+        }
+        drawTimedFruit(kind, b.x, b.y, now, b.ticksLeft / ttlTicks, secs, secs <= 1);
+      } else {
+        lastBonusSecs = null;
+      }
       if (ghost) {
         const fade = ghost.diedAt ? Math.max(0, 1 - (now - ghost.diedAt) / 900) : 1;
         if (fade > 0) {
@@ -849,7 +1365,7 @@
       }
       drawSnakeBody(player, state === 'ready' ? 0 : t, now, false);
       drawEffects(now, dt);
-      if (state === 'dying') {
+      if (state === 'dying' && endCause === 'death') {
         const k = Math.min((now - dieAt) / 700, 1);
         ctx.fillStyle = `rgba(239,148,134,${0.10 * Math.sin(k * Math.PI)})`;
         ctx.fillRect(0, 0, cols * cell, rows * cell);
@@ -861,23 +1377,28 @@
   window.__drift = {
     get: () => ({
       state, score: player ? player.score : 0, best: getBest(),
-      cols, rows, mode: settings.mode, seed: seedStr(runSeed),
+      cols, rows, mode: settings.mode, theme: settings.theme, seed: seedStr(runSeed),
       dir: player ? { ...player.dir } : null,
       fruit: player && player.fruits[0] ? { ...player.fruits[0] } : null,
       fruits: player ? player.fruits.map(f => ({ ...f })) : [],
       bonus: player && player.bonus ? { ...player.bonus } : null,
       snake: player ? player.snake.map(c => ({ ...c })) : [],
+      ticks: player ? player.ticks : 0, trialTicks,
       ghost: !!ghost, ghostAlive: !!(ghost && ghost.sim.alive),
       ghostHead: ghost && ghost.sim.snake[0] ? { ...ghost.sim.snake[0] } : null,
       ghostScore: ghost ? ghost.sim.score : null,
       challenge: challenge ? { ...challenge } : null,
+      prog: JSON.parse(JSON.stringify(prog)),
     }),
   };
 
   // ---------- boot ----------
   Sound.initVolumes(settings.sfxVol, settings.musicVol);
+  Sound.setRain(settings.rain === 'on');
   applyTheme();
   configureBoard();
   updateScoreUI();
+  refreshWardrobe();
+  drawGarden();
   requestAnimationFrame(frame);
 })();

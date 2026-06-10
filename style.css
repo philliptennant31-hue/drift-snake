@@ -166,6 +166,13 @@ canvas {
 .pill.dot.active {
   box-shadow: 0 0 0 3px var(--card), 0 0 0 5px var(--ink-soft);
 }
+.pill.locked {
+  opacity: .35;
+  filter: saturate(.4);
+  cursor: help;
+}
+.pill.locked:hover { transform: none; }
+.pills { flex-wrap: wrap; justify-content: center; }
 
 .sliders { display: flex; gap: 22px; }
 .slider-box { display: flex; flex-direction: column; gap: 4px; align-items: center; }
@@ -211,11 +218,61 @@ input[type=range] {
 .btn-row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
 .hidden { display: none !important; }
 
+.toast {
+  position: fixed;
+  top: 66px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  background: var(--card);
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 1px;
+  padding: 10px 20px;
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.18);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .3s ease, transform .3s ease, visibility 0s linear .3s;
+  z-index: 20;
+}
+.toast.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+  transition: opacity .3s ease, transform .3s ease;
+}
+
+.garden-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.garden-wrap canvas { display: block; }
+.garden-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--ink-soft);
+  text-transform: lowercase;
+}
+
+body.cinema .topbar,
+body.cinema .hint,
+body.cinema .garden-wrap {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .3s ease, visibility 0s linear .3s;
+}
+
 .hint {
   font-size: 12px;
   font-weight: 600;
   color: var(--ink-soft);
   letter-spacing: .5px;
+  transition: opacity .3s ease;
 }
 .hint kbd {
   font-family: inherit;
