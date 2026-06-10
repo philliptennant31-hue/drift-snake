@@ -88,23 +88,23 @@
   // ---------- skins & hats ----------
   const SKINS = {
     drift:   { a: '#8fa3e0', b: '#b3a7e6', head: '#7b90d6' },
-    sunset:  { a: '#f2a36b', b: '#ef8f86', head: '#e08a52', unlock: { timed: 'meadow', n: 20 },   hint: 'eat 20 timed oranges in the meadow world' },
-    dragon:  { a: '#e87fa8', b: '#c86fc9', head: '#d96a97', unlock: { timed: 'sakura', n: 20 },   hint: 'eat 20 timed dragon fruit in the sakura world' },
-    retro:   { a: '#58b368', b: '#9ed36a', head: '#46a356', unlock: { timed: 'classic', n: 20 },  hint: 'eat 20 timed kiwis in the classic world' },
-    galaxy:  { a: '#5c6bc0', b: '#9575cd', head: '#4a58a8', unlock: { timed: 'midnight', n: 20 }, hint: 'eat 20 timed starfruit in the midnight world' },
-    deepsea: { a: '#26818e', b: '#4ab3a8', head: '#1f6f7b', unlock: { timed: 'tide', n: 20 },     hint: 'eat 20 timed blueberries in the tide world' },
-    ember:   { a: '#d97742', b: '#a8524a', head: '#c2632f', unlock: { timed: 'autumn', n: 20 },   hint: 'eat 20 timed persimmons in the autumn world' },
-    ink:     { a: '#3d3b38', b: '#6e6b66', head: '#2e2c2a', unlock: { timed: 'mono', n: 20 },     hint: 'eat 20 timed plums in the mono world' },
+    sunset:  { a: '#f2a36b', b: '#ef8f86', head: '#e08a52', unlock: { timed: 'meadow', n: 30 },   hint: 'eat 30 timed oranges in the meadow world' },
+    dragon:  { a: '#e87fa8', b: '#c86fc9', head: '#d96a97', unlock: { timed: 'sakura', n: 30 },   hint: 'eat 30 timed dragon fruit in the sakura world' },
+    retro:   { a: '#58b368', b: '#9ed36a', head: '#46a356', unlock: { timed: 'classic', n: 30 },  hint: 'eat 30 timed kiwis in the classic world' },
+    galaxy:  { a: '#5c6bc0', b: '#9575cd', head: '#4a58a8', unlock: { timed: 'midnight', n: 30 }, hint: 'eat 30 timed starfruit in the midnight world' },
+    deepsea: { a: '#26818e', b: '#4ab3a8', head: '#1f6f7b', unlock: { timed: 'tide', n: 30 },     hint: 'eat 30 timed blueberries in the tide world' },
+    ember:   { a: '#d97742', b: '#a8524a', head: '#c2632f', unlock: { timed: 'autumn', n: 30 },   hint: 'eat 30 timed persimmons in the autumn world' },
+    ink:     { a: '#3d3b38', b: '#6e6b66', head: '#2e2c2a', unlock: { timed: 'mono', n: 30 },     hint: 'eat 30 timed plums in the mono world' },
     honey:   { a: '#e2b13c', b: '#f0d27a', head: '#d49f28', unlock: { stat: 'golden', n: 10 },    hint: 'find 10 golden apples, any world' },
   };
   const HATS = {
     none:     { label: 'none' },
-    sprout:   { label: 'sprout',   unlock: { stat: 'fruitTotal', n: 100 },  hint: 'eat 100 fruit, lifetime' },
-    crown:    { label: 'crown',    unlock: { stat: 'ghostWins', n: 1 },     hint: 'beat a ghost of your own best run' },
-    flower:   { label: 'flower',   unlock: { stat: 'fruitTotal', n: 500 },  hint: 'eat 500 fruit, lifetime' },
-    chef:     { label: 'chef',     unlock: { stat: 'perfect', n: 10 },      hint: 'catch 10 timed fruit at the full 5 points' },
+    sprout:   { label: 'sprout',   unlock: { stat: 'fruitTotal', n: 250 },  hint: 'eat 250 fruit, lifetime' },
+    crown:    { label: 'crown',    unlock: { stat: 'ghostWins', n: 3 },     hint: 'beat a ghost of your own best run 3 times' },
+    flower:   { label: 'flower',   unlock: { stat: 'fruitTotal', n: 1000 }, hint: 'eat 1000 fruit, lifetime' },
+    chef:     { label: 'chef',     unlock: { stat: 'perfect', n: 25 },      hint: 'catch 25 timed fruit at the full 5 points' },
     bow:      { label: 'bow',      unlock: { stat: 'dailyStreak', n: 7 },   hint: 'play the daily 7 days in a row' },
-    mushroom: { label: 'mushroom', unlock: { stat: 'fruitTotal', n: 1500 }, hint: 'eat 1500 fruit, lifetime' },
+    mushroom: { label: 'mushroom', unlock: { stat: 'fruitTotal', n: 3000 }, hint: 'eat 3000 fruit, lifetime' },
     halo:     { label: 'halo',     unlock: { stat: 'clutch', n: 100 },      hint: 'catch 100 timed fruit with 1 second left' },
   };
   function unlockProgress(u) {
@@ -115,12 +115,25 @@
   // ---------- settings ----------
   const DEFAULTS = {
     mode: 'classic', pace: 'normal', size: 'normal', layout: 'wide',
-    theme: 'meadow', fruits: 'single', ambience: 'on', rain: 'off',
+    theme: 'meadow', fruits: 'single', ambience: 'on',
     sfxVol: 0.8, musicVol: 0.5,
   };
   let settings = { ...DEFAULTS };
   try { Object.assign(settings, JSON.parse(localStorage.getItem('drift-settings') || '{}')); } catch (e) {}
   const saveSettings = () => localStorage.setItem('drift-settings', JSON.stringify(settings));
+
+  // rain belongs to each world's atmosphere: remembered per world,
+  // on by default only where it fits
+  function getRain(world) {
+    const o = settings.rainW || {};
+    if (o[world]) return o[world];
+    return world === 'midnight' ? 'on' : 'off';
+  }
+  function setRainSetting(world, v) {
+    settings.rainW = settings.rainW || {};
+    settings.rainW[world] = v;
+    saveSettings();
+  }
 
   // ---------- progression ----------
   const PROG_DEFAULT = {
@@ -463,7 +476,7 @@
   // ---------- run lifecycle ----------
   function startRun(seed) {
     Sound.ensure();
-    Sound.setRain(settings.rain === 'on');
+    Sound.setRain(getRain(settings.theme) === 'on');
     if (Sound.musicWanted()) Sound.startMusic();
     configureBoard();
     runSeed = seed;
@@ -719,13 +732,28 @@
       if (g === 'theme') {
         applyTheme();
         resetAmbient();   // no leftover fish in the autumn woods
+        Sound.setRain(getRain(settings.theme) === 'on');
+        syncRainPills();
       }
-      if (g === 'rain') Sound.setRain(settings.rain === 'on');
       configureBoard();
       updateScoreUI();
       drawWardrobePreview();
     });
     sync();
+  });
+
+  function syncRainPills() {
+    document.querySelectorAll('#rainPills .pill').forEach(p =>
+      p.classList.toggle('active', p.dataset.v === getRain(settings.theme)));
+  }
+  $('rainPills').addEventListener('click', e => {
+    const b = e.target.closest('.pill');
+    if (!b) return;
+    setRainSetting(settings.theme, b.dataset.v);
+    syncRainPills();
+    Sound.ensure();
+    Sound.setRain(getRain(settings.theme) === 'on');
+    Sound.ui();
   });
 
   // try-on preview: the snake in the style tab wears whatever you hover,
@@ -1104,44 +1132,33 @@
       }
       ctx.globalAlpha = 1;
     } else if (settings.theme === 'tide') {
-      // kelp: segmented fronds that sway more toward the tip, with leaf blades
+      // coral clusters along the seabed: branching fingers, gentle and still
       const rng = mulberry32(77);
-      const n = Math.max(6, Math.floor(cols / 1.6));
       const H = rows * cell;
-      ctx.lineCap = 'round';
-      for (let i = 0; i < n; i++) {
-        const x0 = rng() * cols * cell;
-        const segs = 3 + Math.floor(rng() * 2);
-        const segH = cell * (0.55 + rng() * 0.35);
-        const hue = rng();
-        const phase = rng() * 6.28;
-        const speed = 1000 + rng() * 600;
-        ctx.strokeStyle = hue < 0.5 ? 'rgba(58,110,98,.42)' : 'rgba(74,130,108,.38)';
-        ctx.fillStyle = ctx.strokeStyle;
-        ctx.lineWidth = Math.max(2, cell * 0.09);
-        let x = x0, y = H;
+      const clusters = Math.max(4, Math.floor(cols / 3));
+      const CORALS = ['rgba(214,118,124,.42)', 'rgba(226,160,110,.40)', 'rgba(94,150,142,.42)', 'rgba(186,130,170,.38)'];
+      for (let i = 0; i < clusters; i++) {
+        const cx = rng() * cols * cell;
+        const color = CORALS[Math.floor(rng() * CORALS.length)];
+        ctx.fillStyle = color;
+        const fingers = 3 + Math.floor(rng() * 3);
+        const breathe = Math.sin(now / (1700 + rng() * 600) + i) * 1.5;
+        for (let f = 0; f < fingers; f++) {
+          const fx = cx + (f - (fingers - 1) / 2) * cell * 0.17 + breathe * (f % 2 ? 1 : -1) * 0.4;
+          const fh = cell * (0.30 + rng() * 0.55) * (1 - Math.abs(f - (fingers - 1) / 2) * 0.18);
+          const r0 = cell * (0.085 + rng() * 0.03);
+          for (let y = 0; y <= fh; y += r0 * 0.9) {
+            const r = r0 * (1 - (y / fh) * 0.45);
+            ctx.beginPath();
+            ctx.arc(fx + Math.sin(y / cell * 2 + i) * cell * 0.03, H - y, r, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        // a small pebble beside each cluster
+        ctx.fillStyle = 'rgba(120,140,138,.30)';
         ctx.beginPath();
-        ctx.moveTo(x, y);
-        for (let sgi = 1; sgi <= segs; sgi++) {
-          const sway = Math.sin(now / speed + phase + sgi * 0.8) * cell * 0.12 * sgi;
-          const nx = x0 + sway, ny = H - segH * sgi;
-          ctx.quadraticCurveTo(x + sway * 0.3, (y + ny) / 2, nx, ny);
-          x = nx; y = ny;
-        }
-        ctx.stroke();
-        // blades alternating up the frond
-        for (let sgi = 1; sgi <= segs; sgi++) {
-          const sway = Math.sin(now / speed + phase + sgi * 0.8) * cell * 0.12 * sgi;
-          const bx = x0 + sway, by = H - segH * sgi + segH * 0.3;
-          const side = sgi % 2 ? 1 : -1;
-          ctx.save();
-          ctx.translate(bx, by);
-          ctx.rotate(side * (0.9 + Math.sin(now / speed + phase + sgi) * 0.15));
-          ctx.beginPath();
-          ctx.ellipse(side * cell * 0.14, 0, cell * 0.16, cell * 0.055, 0, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.restore();
-        }
+        ctx.ellipse(cx + cell * (0.4 + rng() * 0.3), H - cell * 0.05, cell * 0.12, cell * 0.07, 0, 0, Math.PI * 2);
+        ctx.fill();
       }
     }
   }
@@ -1475,6 +1492,34 @@
         ctx.arc(hx + ox * s, hy - s * 0.55, s * 0.11, 0, Math.PI * 2);
         ctx.fill();
       }
+    } else if (kind === 'bow') {
+      ctx.fillStyle = '#e8849d';
+      for (const side of [-1, 1]) {
+        ctx.beginPath();
+        ctx.moveTo(hx, hy - s * 0.46);
+        ctx.lineTo(hx + side * s * 0.23, hy - s * 0.60);
+        ctx.lineTo(hx + side * s * 0.23, hy - s * 0.33);
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.fillStyle = '#d96a88';
+      ctx.beginPath();
+      ctx.arc(hx, hy - s * 0.46, s * 0.065, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (kind === 'mushroom') {
+      ctx.fillStyle = '#f3ead9';
+      ctx.fillRect(hx - s * 0.07, hy - s * 0.44, s * 0.14, s * 0.10);
+      ctx.fillStyle = '#d95d54';
+      ctx.beginPath();
+      ctx.arc(hx, hy - s * 0.44, s * 0.24, Math.PI, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#fdf5ec';
+      for (const [ox, oy] of [[-0.12, -0.52], [0.04, -0.62], [0.15, -0.50]]) {
+        ctx.beginPath();
+        ctx.arc(hx + ox * s, hy + oy * s, s * 0.04, 0, Math.PI * 2);
+        ctx.fill();
+      }
     } else if (kind === 'halo') {
       ctx.strokeStyle = '#e9c46a';
       ctx.lineWidth = Math.max(2, s * 0.06);
@@ -1675,7 +1720,7 @@
   }
 
   // ---------- ambient particles ----------
-  const AMB_RATE = { meadow: 1000, sakura: 650, midnight: 1000, tide: 600, autumn: 850, mono: 1500 };
+  const AMB_RATE = { meadow: 1000, sakura: 650, classic: 1100, midnight: 1000, tide: 600, autumn: 850, mono: 550 };
   function spawnAmbient(now) {
     const W = cols * cell, H = rows * cell;
     const theme = settings.theme;
@@ -1685,7 +1730,7 @@
         ambient.push({
           kind: 'butterfly', x: Math.random() < 0.5 ? -cell * 0.4 : W + cell * 0.4,
           y: H * (0.15 + Math.random() * 0.7), phase: Math.random() * 6.28, born: now,
-          color: ['#f7f3e8', '#f2d8a0', '#cfc3ee'][Math.floor(Math.random() * 3)],
+          color: ['#ffffff', '#ffd98e', '#d9c9ff'][Math.floor(Math.random() * 3)],
         });
         return;
       }
@@ -1700,13 +1745,25 @@
           y: -cell * (0.4 + Math.random() * 2.5), phase: Math.random() * 6.28,
         });
       }
+    } else if (theme === 'classic') {
+      // little screen-glint sparkles, like an old handheld catching the light
+      if (ambient.length >= 8) return;
+      ambient.push({
+        kind: 'sparkle', x: Math.random() * W, y: Math.random() * H,
+        born: now, dur: 1400 + Math.random() * 900, phase: Math.random() * 6.28,
+      });
     } else if (theme === 'autumn') {
       if (ambient.length >= 16) return;
       const color = ['#d98a4a', '#c2632f', '#b8923f'][Math.floor(Math.random() * 3)];
-      ambient.push({ kind: 'leaf', color, x: Math.random() * W, y: -cell * 0.4, phase: Math.random() * 6.28 });
+      ambient.push({ kind: 'leaf', maple: true, color, x: Math.random() * W, y: -cell * 0.4, phase: Math.random() * 6.28 });
     } else if (theme === 'mono') {
-      if (ambient.length >= 20) return;
-      ambient.push({ kind: 'dust', x: Math.random() * W, y: -cell * 0.2, phase: Math.random() * 6.28 });
+      if (ambient.length >= 26) return;
+      ambient.push({
+        kind: 'snow', x: Math.random() * W, y: -cell * 0.3,
+        phase: Math.random() * 6.28,
+        r: cell * (0.035 + Math.random() * 0.05),
+        sp: 0.55 + Math.random() * 0.7,
+      });
     } else if (theme === 'midnight') {
       if (ambient.filter(a => a.kind === 'firefly').length >= 10) return;
       ambient.push({
@@ -1715,20 +1772,37 @@
         size: 0.7 + Math.random() * 0.7, sp: 0.6 + Math.random() * 0.9,
       });
     } else if (theme === 'tide') {
+      if (!ambient.some(a => a.kind === 'jelly') && Math.random() < 0.07) {
+        ambient.push({
+          kind: 'jelly', x: W * (0.1 + Math.random() * 0.8), y: H + cell * 0.6,
+          phase: Math.random() * 6.28,
+        });
+        return;
+      }
+      if (!ambient.some(a => a.kind === 'crab') && Math.random() < 0.05) {
+        const dir = Math.random() < 0.5 ? 1 : -1;
+        ambient.push({
+          kind: 'crab', dir,
+          x: dir > 0 ? -cell : W + cell,
+          y: H - cell * 0.22, phase: Math.random() * 6.28,
+        });
+        return;
+      }
       const fish = ambient.filter(a => a.kind === 'fish').length;
       if (fish < 7 && Math.random() < 0.4) {
         const dir = Math.random() < 0.5 ? 1 : -1;
         ambient.push({
           kind: 'fish', dir,
           x: dir > 0 ? -cell : W + cell,
-          y: H * (0.1 + Math.random() * 0.75),
+          y: H * (0.1 + Math.random() * 0.72),
           phase: Math.random() * 6.28,
           size: 0.6 + Math.random() * 0.6,
           sp: 0.25 + Math.random() * 0.3,
+          shape: ['round', 'long', 'angel'][Math.floor(Math.random() * 3)],
         });
         return;
       }
-      if (ambient.length >= 22) return;
+      if (ambient.length >= 24) return;
       ambient.push({ kind: 'bubble', x: Math.random() * W, y: H + cell * 0.3, phase: Math.random() * 6.28, r: cell * (0.05 + Math.random() * 0.08) });
     }
   }
@@ -1740,10 +1814,29 @@
     const H = rows * cell, W = cols * cell;
     for (let i = 0; i < 10; i++) spawnAmbient(now || performance.now());
     for (const a of ambient) {
-      if (a.kind === 'leaf' || a.kind === 'petal' || a.kind === 'dust') a.y = Math.random() * H;
+      if (a.kind === 'leaf' || a.kind === 'petal' || a.kind === 'snow') a.y = Math.random() * H;
       if (a.kind === 'bubble') a.y = Math.random() * H;
       if (a.kind === 'fish') a.x = Math.random() * W;
     }
+  }
+
+  function drawMapleLeaf(g, s) {
+    const P = [
+      [0, -1], [0.18, -0.5], [0.75, -0.55], [0.32, -0.05], [0.65, 0.25],
+      [0.12, 0.18], [0, 0.35], [-0.12, 0.18], [-0.65, 0.25], [-0.32, -0.05],
+      [-0.75, -0.55], [-0.18, -0.5],
+    ];
+    g.beginPath();
+    g.moveTo(P[0][0] * s, P[0][1] * s);
+    for (let i = 1; i < P.length; i++) g.lineTo(P[i][0] * s, P[i][1] * s);
+    g.closePath();
+    g.fill();
+    g.lineWidth = Math.max(1, s * 0.12);
+    g.strokeStyle = g.fillStyle;
+    g.beginPath();
+    g.moveTo(0, s * 0.35);
+    g.lineTo(0, s * 0.7);
+    g.stroke();
   }
 
   function drawAmbient(now, dt) {
@@ -1756,36 +1849,73 @@
     const W = cols * cell, H = rows * cell;
     for (let i = ambient.length - 1; i >= 0; i--) {
       const a = ambient[i];
-      if (a.kind === 'leaf' || a.kind === 'petal') {
+      if (a.kind === 'leaf') {
         a.y += dt * cell * 0.0009;
         const x = a.x + Math.sin(now / 1100 + a.phase) * cell * 0.5;
         if (a.y > H + cell * 0.5) { ambient.splice(i, 1); continue; }
         ctx.save();
         ctx.translate(x, a.y);
-        ctx.rotate(Math.sin(now / 800 + a.phase) * 0.8);
-        ctx.globalAlpha = 0.7;
-        ctx.fillStyle = a.color || (a.kind === 'petal' ? '#f3b8cb' : '#9cbf8e');
+        ctx.rotate(Math.sin(now / 800 + a.phase) * 0.8 + (a.maple ? a.phase : 0));
+        ctx.globalAlpha = 0.75;
+        ctx.fillStyle = a.color || '#9cbf8e';
+        if (a.maple) {
+          drawMapleLeaf(ctx, cell * 0.17);
+        } else {
+          ctx.beginPath();
+          ctx.ellipse(0, 0, cell * 0.14, cell * 0.07, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      } else if (a.kind === 'petal') {
+        a.y += dt * cell * 0.0008;
+        const x = a.x + Math.sin(now / 1000 + a.phase) * cell * 0.55;
+        if (a.y > H + cell * 0.5) { ambient.splice(i, 1); continue; }
+        ctx.save();
+        ctx.translate(x, a.y);
+        ctx.rotate(Math.sin(now / 700 + a.phase) * 1.1 + a.phase);
+        ctx.globalAlpha = 0.85;
+        const s = cell * 0.105;
+        ctx.fillStyle = '#f6bfd2';
         ctx.beginPath();
-        ctx.ellipse(0, 0, cell * 0.14, cell * 0.07, 0, 0, Math.PI * 2);
+        ctx.moveTo(0, -s * 1.35);
+        ctx.quadraticCurveTo(s * 1.05, -s * 0.35, 0, s);
+        ctx.quadraticCurveTo(-s * 1.05, -s * 0.35, 0, -s * 1.35);
+        ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,.5)';
+        ctx.beginPath();
+        ctx.ellipse(0, -s * 0.15, s * 0.32, s * 0.5, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
-      } else if (a.kind === 'dust') {
-        a.y += dt * cell * 0.0004;
-        const x = a.x + Math.sin(now / 1500 + a.phase) * cell * 0.3;
-        if (a.y > rows * cell + cell * 0.3) { ambient.splice(i, 1); continue; }
-        ctx.globalAlpha = 0.22;
-        ctx.fillStyle = '#6e6b66';
+      } else if (a.kind === 'snow') {
+        a.y += dt * cell * 0.00055 * a.sp;
+        const x = a.x + Math.sin(now / 1400 + a.phase) * cell * 0.35;
+        if (a.y > H + cell * 0.3) { ambient.splice(i, 1); continue; }
+        ctx.globalAlpha = 0.85;
+        ctx.fillStyle = '#ffffff';
         ctx.beginPath();
-        ctx.arc(x, a.y, cell * 0.04, 0, Math.PI * 2);
+        ctx.arc(x, a.y, a.r, 0, Math.PI * 2);
         ctx.fill();
+      } else if (a.kind === 'sparkle') {
+        const t = (now - a.born) / a.dur;
+        if (t >= 1) { ambient.splice(i, 1); continue; }
+        const al = Math.sin(t * Math.PI);
+        const s = cell * 0.11 * (0.6 + 0.4 * al);
+        ctx.globalAlpha = al * 0.8;
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = Math.max(1.4, cell * 0.045);
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(a.x - s, a.y); ctx.lineTo(a.x + s, a.y);
+        ctx.moveTo(a.x, a.y - s); ctx.lineTo(a.x, a.y + s);
+        ctx.stroke();
       } else if (a.kind === 'firefly') {
-        if (now - a.born > 11000) { ambient.splice(i, 1); continue; }
+        if (now - a.born > 14000) { ambient.splice(i, 1); continue; }
         const sz = a.size || 1, sp = a.sp || 1;
-        // two slow drift frequencies layered for an organic wander
-        a.x += (Math.cos(now / 1500 * sp + a.phase) * 0.3 + Math.cos(now / 480 + a.phase * 3) * 0.12) * sp;
-        a.y += (Math.sin(now / 1250 * sp + a.phase * 1.7) * 0.3 + Math.sin(now / 410 + a.phase * 2.2) * 0.1) * sp;
+        // two slow drift frequencies layered for an organic, unhurried wander
+        a.x += (Math.cos(now / 1500 * sp + a.phase) * 0.16 + Math.cos(now / 480 + a.phase * 3) * 0.06) * sp;
+        a.y += (Math.sin(now / 1250 * sp + a.phase * 1.7) * 0.16 + Math.sin(now / 410 + a.phase * 2.2) * 0.05) * sp;
         const glow = 0.30 + 0.40 * Math.sin(now / (260 + sz * 90) + a.phase);
-        const fade = Math.min(1, (now - a.born) / 1200, (11000 - (now - a.born)) / 1200);
+        const fade = Math.min(1, (now - a.born) / 1200, (14000 - (now - a.born)) / 1200);
         ctx.globalAlpha = Math.max(0, glow * fade);
         ctx.fillStyle = '#f4d35e';
         ctx.beginPath(); ctx.arc(a.x, a.y, cell * 0.11 * sz, 0, Math.PI * 2); ctx.fill();
@@ -1793,38 +1923,127 @@
         ctx.fillStyle = '#fdf3c0';
         ctx.beginPath(); ctx.arc(a.x, a.y, cell * 0.05 * sz, 0, Math.PI * 2); ctx.fill();
       } else if (a.kind === 'butterfly') {
-        if (now - a.born > 14000) { ambient.splice(i, 1); continue; }
-        a.x += Math.cos(now / 1300 + a.phase) * 0.5 + (a.phase % 2 < 1 ? 0.22 : -0.22);
-        a.y += Math.sin(now / 600 + a.phase * 2) * 0.45;
-        const fade = Math.min(1, (now - a.born) / 800, (14000 - (now - a.born)) / 800);
-        const flap = Math.abs(Math.sin(now / 110 + a.phase));
-        ctx.globalAlpha = 0.85 * fade;
+        if (now - a.born > 18000) { ambient.splice(i, 1); continue; }
+        a.x += Math.cos(now / 1500 + a.phase) * 0.32 + (a.phase % 2 < 1 ? 0.15 : -0.15);
+        a.y += Math.sin(now / 700 + a.phase * 2) * 0.3;
+        const fade = Math.min(1, (now - a.born) / 800, (18000 - (now - a.born)) / 800);
+        const flap = Math.abs(Math.sin(now / 130 + a.phase));
+        ctx.globalAlpha = 0.95 * fade;
         ctx.fillStyle = a.color;
         for (const s of [-1, 1]) {
           ctx.beginPath();
-          ctx.ellipse(a.x + s * cell * 0.07 * (0.3 + flap * 0.7), a.y,
-            cell * 0.085 * (0.3 + flap * 0.7), cell * 0.11, s * 0.5, 0, Math.PI * 2);
+          ctx.ellipse(a.x + s * cell * 0.10 * (0.3 + flap * 0.7), a.y,
+            cell * 0.12 * (0.3 + flap * 0.7), cell * 0.15, s * 0.5, 0, Math.PI * 2);
           ctx.fill();
         }
-        ctx.fillStyle = 'rgba(90,80,70,.7)';
+        ctx.fillStyle = 'rgba(90,80,70,.8)';
         ctx.beginPath();
-        ctx.ellipse(a.x, a.y, cell * 0.018, cell * 0.07, 0, 0, Math.PI * 2);
+        ctx.ellipse(a.x, a.y, cell * 0.024, cell * 0.095, 0, 0, Math.PI * 2);
         ctx.fill();
       } else if (a.kind === 'fish') {
-        const sz = a.size, W2 = cols * cell;
+        const sz = a.size;
         a.x += a.dir * a.sp * dt * cell * 0.0011;
         const y = a.y + Math.sin(now / 900 + a.phase) * cell * 0.3;
-        if ((a.dir > 0 && a.x > W2 + cell) || (a.dir < 0 && a.x < -cell)) { ambient.splice(i, 1); continue; }
-        ctx.globalAlpha = 0.22;
+        if ((a.dir > 0 && a.x > W + cell) || (a.dir < 0 && a.x < -cell)) { ambient.splice(i, 1); continue; }
+        ctx.globalAlpha = 0.30;
         ctx.fillStyle = '#3a6470';
+        if (a.shape === 'round') {
+          ctx.beginPath();
+          ctx.arc(a.x, y, cell * 0.16 * sz, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(a.x - a.dir * cell * 0.13 * sz, y);
+          ctx.lineTo(a.x - a.dir * cell * 0.30 * sz, y - cell * 0.11 * sz);
+          ctx.lineTo(a.x - a.dir * cell * 0.30 * sz, y + cell * 0.11 * sz);
+          ctx.closePath();
+          ctx.fill();
+        } else if (a.shape === 'angel') {
+          ctx.beginPath();
+          ctx.ellipse(a.x, y, cell * 0.16 * sz, cell * 0.22 * sz, 0, 0, Math.PI * 2);
+          ctx.fill();
+          for (const fs of [-1, 1]) {
+            ctx.beginPath();
+            ctx.moveTo(a.x, y + fs * cell * 0.16 * sz);
+            ctx.lineTo(a.x - a.dir * cell * 0.14 * sz, y + fs * cell * 0.34 * sz);
+            ctx.lineTo(a.x + a.dir * cell * 0.06 * sz, y + fs * cell * 0.2 * sz);
+            ctx.closePath();
+            ctx.fill();
+          }
+          ctx.beginPath();
+          ctx.moveTo(a.x - a.dir * cell * 0.14 * sz, y);
+          ctx.lineTo(a.x - a.dir * cell * 0.3 * sz, y - cell * 0.1 * sz);
+          ctx.lineTo(a.x - a.dir * cell * 0.3 * sz, y + cell * 0.1 * sz);
+          ctx.closePath();
+          ctx.fill();
+        } else {
+          ctx.beginPath();
+          ctx.ellipse(a.x, y, cell * 0.30 * sz, cell * 0.10 * sz, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(a.x - a.dir * cell * 0.26 * sz, y);
+          ctx.lineTo(a.x - a.dir * cell * 0.44 * sz, y - cell * 0.11 * sz);
+          ctx.lineTo(a.x - a.dir * cell * 0.44 * sz, y + cell * 0.11 * sz);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.fillStyle = 'rgba(20,40,46,.6)';
         ctx.beginPath();
-        ctx.ellipse(a.x, y, cell * 0.30 * sz, cell * 0.13 * sz, 0, 0, Math.PI * 2);
+        ctx.arc(a.x + a.dir * cell * 0.10 * sz, y - cell * 0.03 * sz, cell * 0.025 * sz, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (a.kind === 'jelly') {
+        a.y -= dt * cell * 0.00028;
+        const x = a.x + Math.sin(now / 1300 + a.phase) * cell * 0.4;
+        if (a.y < -cell) { ambient.splice(i, 1); continue; }
+        const pulse = 1 + Math.sin(now / 650 + a.phase) * 0.1;
+        const r = cell * 0.22 * pulse;
+        ctx.globalAlpha = 0.30;
+        ctx.fillStyle = '#e8a8c0';
+        ctx.beginPath();
+        ctx.arc(x, a.y, r, Math.PI, 0);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#e8a8c0';
+        ctx.lineWidth = Math.max(1, cell * 0.03);
+        for (let tn = -1; tn <= 1; tn++) {
+          ctx.beginPath();
+          ctx.moveTo(x + tn * r * 0.5, a.y);
+          ctx.quadraticCurveTo(
+            x + tn * r * 0.5 + Math.sin(now / 400 + a.phase + tn) * cell * 0.08,
+            a.y + cell * 0.2,
+            x + tn * r * 0.5 + Math.sin(now / 500 + a.phase + tn * 2) * cell * 0.12,
+            a.y + cell * 0.38);
+          ctx.stroke();
+        }
+      } else if (a.kind === 'crab') {
+        a.x += a.dir * dt * cell * 0.00045;
+        if ((a.dir > 0 && a.x > W + cell) || (a.dir < 0 && a.x < -cell)) { ambient.splice(i, 1); continue; }
+        const y = a.y + Math.sin(now / 140 + a.phase) * 1.2;
+        ctx.globalAlpha = 0.55;
+        ctx.strokeStyle = '#b85c50';
+        ctx.lineWidth = Math.max(1, cell * 0.035);
+        for (const s of [-1, 1]) {
+          for (let leg = 0; leg < 3; leg++) {
+            const lx = a.x + s * cell * (0.10 + leg * 0.06);
+            const lift = Math.sin(now / 140 + a.phase + leg * 2 + (s > 0 ? 0 : 3)) * cell * 0.04;
+            ctx.beginPath();
+            ctx.moveTo(a.x + s * cell * 0.08, y);
+            ctx.lineTo(lx + s * cell * 0.06, y + cell * 0.12 - lift);
+            ctx.stroke();
+          }
+        }
+        ctx.fillStyle = '#c4655a';
+        ctx.beginPath();
+        ctx.ellipse(a.x, y, cell * 0.16, cell * 0.11, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.beginPath();
-        ctx.moveTo(a.x - a.dir * cell * 0.26 * sz, y);
-        ctx.lineTo(a.x - a.dir * cell * 0.48 * sz, y - cell * 0.14 * sz);
-        ctx.lineTo(a.x - a.dir * cell * 0.48 * sz, y + cell * 0.14 * sz);
-        ctx.closePath();
+        ctx.arc(a.x + a.dir * cell * 0.19, y - cell * 0.04, cell * 0.055, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#2e2420';
+        ctx.beginPath();
+        ctx.arc(a.x - cell * 0.05, y - cell * 0.10, cell * 0.022, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(a.x + cell * 0.05, y - cell * 0.10, cell * 0.022, 0, Math.PI * 2);
         ctx.fill();
       } else if (a.kind === 'bubble') {
         a.y -= dt * cell * 0.0007;
@@ -2046,13 +2265,26 @@
 
   // ---------- boot ----------
   Sound.initVolumes(settings.sfxVol, settings.musicVol);
-  Sound.setRain(settings.rain === 'on');
+  Sound.setRain(getRain(settings.theme) === 'on');
   applyTheme();
   configureBoard();
   updateScoreUI();
   refreshWardrobe();
   updateDailyBtn();
+  syncRainPills();
+  resetAmbient();
   drawGarden();
+  // autoplay rules silence audio until the page is touched: the first
+  // click or keypress anywhere brings the world's sound back
+  const kickAudio = () => {
+    document.removeEventListener('pointerdown', kickAudio);
+    document.removeEventListener('keydown', kickAudio);
+    Sound.ensure();
+    Sound.setVolumes(settings.sfxVol, settings.musicVol);
+    Sound.setRain(getRain(settings.theme) === 'on');
+  };
+  document.addEventListener('pointerdown', kickAudio);
+  document.addEventListener('keydown', kickAudio);
   if ('serviceWorker' in navigator && location.protocol === 'https:') {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }

@@ -52,13 +52,13 @@ const Sound = (() => {
     },
     autumn: {
       style: 'pad', padType: 'triangle', saw: true, melody: false, attack: 2.0,
-      lp: 680, crackle: 0.13, wave: 0, gap: 7.5, dur: 8.4, nature: 'wind',
+      lp: 680, crackle: 0.05, wave: 0, gap: 7.5, dur: 8.4, nature: 'wind',
       chords: [[51, 55, 58, 62], [48, 51, 55, 58], [44, 48, 51, 55], [46, 50, 53, 57]],
       bass: [39, 36, 32, 34],
     },
     mono: {
-      style: 'felt',
-      lp: 900, crackle: 0.16, wave: 0, gap: 8.5, dur: 8.5, nature: null,
+      style: 'piano',
+      lp: 1100, crackle: 0.05, wave: 0, gap: 7.5, dur: 7.5, nature: null,
       bass: [],
     },
   };
@@ -83,7 +83,11 @@ const Sound = (() => {
     musicBus = ctx.createGain();
     musicBus.gain.value = vols.music * 0.6;
     musicFade.connect(musicBus).connect(master);
-    if (rainWanted) startRainNode();
+    if (rainWanted) {
+      startRainNode();
+      startRainDrops();
+      rainGain.gain.setTargetAtTime(1, ctx.currentTime, 0.7);
+    }
     return true;
   }
 
@@ -179,7 +183,7 @@ const Sound = (() => {
     }
     const env = ctx.createGain();
     env.gain.setValueAtTime(0.0001, at);
-    env.gain.exponentialRampToValueAtTime(peak, at + Math.min(m.attack, m.dur * 0.3));
+    env.gain.exponentialRampToValueAtTime(peak, at + Math.min(m.attack || 1.2, m.dur * 0.3));
     env.gain.setValueAtTime(peak, at + m.dur - 1.8);
     env.gain.exponentialRampToValueAtTime(0.0001, at + m.dur);
     o.connect(env).connect(busLp);
@@ -386,16 +390,19 @@ const Sound = (() => {
           scaleIdx + (Math.random() < 0.5 ? 1 : -1) * (Math.random() < 0.2 ? 2 : 1)));
         chipNote(t, scale[scaleIdx], 0.011, step * 0.85);
       }
-    } else if (m.style === 'felt') {
-      const pool = [45, 52, 57, 60, 64, 67, 71];
-      const notes = 2 + Math.floor(Math.random() * 2);
-      let t = at + 0.4 + Math.random();
-      for (let i = 0; i < notes; i++) {
-        const n = pool[Math.floor(Math.random() * pool.length)];
-        feltNote(t, n);
-        if (Math.random() < 0.3) feltNote(t + 0.07, n - 12);
-        t += 1.6 + Math.random() * 2.4;
-      }
+    } else if (m.style === 'piano') {
+      // gentle arpeggio phrases, always consonant
+      const seqs = [
+        [57, 64, 69, 72, 69, 64],
+        [60, 64, 67, 72, 67, 64],
+        [57, 62, 64, 69, 64, 62],
+        [55, 60, 64, 67, 64, 60],
+      ];
+      const seq = seqs[Math.floor(Math.random() * seqs.length)];
+      const step = 0.55 + Math.random() * 0.2;
+      const t0 = at + 0.3;
+      seq.forEach((n, i) => feltNote(t0 + i * step, n));
+      if (Math.random() < 0.5) feltNote(t0 + seq.length * step + 0.4, seq[0] - 12);
     }
     natureEvents(at, m);
   }
@@ -409,7 +416,8 @@ const Sound = (() => {
     nextWindowAt = ctx.currentTime + 0.15;
     schedTimer = setInterval(() => {
       while (nextWindowAt < ctx.currentTime + 2.5) {
-        playWindow(nextWindowAt, windowIdx++);
+        // one bad note must never silence a world
+        try { playWindow(nextWindowAt, windowIdx++); } catch (e) {}
         nextWindowAt += mood().gap;
       }
     }, 400);
@@ -426,23 +434,44 @@ const Sound = (() => {
     }
   }
 
-  // ----- rain (independent of the music bus) -----
+  // ----- rain: pitter-patter — individual drops over a soft hiss bed -----
+  let rainTimer = null, rainBuf = null;
   function startRainNode() {
     if (rainGain || !ctx) return;
-    const lp = ctx.createBiquadFilter();
-    lp.type = 'lowpass';
-    lp.frequency.value = 1500;
-    const lfo = ctx.createOscillator();
-    lfo.frequency.value = 0.21;
-    const lfoGain = ctx.createGain();
-    lfoGain.gain.value = 250;
-    lfo.connect(lfoGain).connect(lp.frequency);
-    lfo.start();
     rainGain = ctx.createGain();
     rainGain.gain.value = 0.0001;
+    rainGain.connect(master);
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 900;
+    const bed = ctx.createGain();
+    bed.gain.value = 0.012;
     loopNoise(noiseBuffer(2.5, false)).connect(lp);
-    lp.connect(rainGain).connect(master);
-    rainGain.gain.exponentialRampToValueAtTime(0.05, ctx.currentTime + 2);
+    lp.connect(bed).connect(rainGain);
+    rainBuf = noiseBuffer(0.08, false);
+  }
+  function dropTick(at) {
+    const src = ctx.createBufferSource();
+    src.buffer = rainBuf;
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = 1600 + Math.random() * 3800;
+    bp.Q.value = 6;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.012 + Math.random() * 0.05, at);
+    g.gain.exponentialRampToValueAtTime(0.0001, at + 0.035 + Math.random() * 0.05);
+    src.connect(bp).connect(g).connect(rainGain);
+    src.start(at);
+  }
+  function startRainDrops() {
+    if (rainTimer) return;
+    let nextDrop = ctx.currentTime + 0.05;
+    rainTimer = setInterval(() => {
+      while (nextDrop < ctx.currentTime + 0.6) {
+        try { dropTick(nextDrop); } catch (e) {}
+        nextDrop += 0.04 + Math.random() * 0.13;
+      }
+    }, 200);
   }
 
   // ----- sfx -----
@@ -500,10 +529,12 @@ const Sound = (() => {
       if (on) {
         ensure();
         startRainNode();
+        startRainDrops();
         rainGain.gain.cancelScheduledValues(ctx.currentTime);
-        rainGain.gain.setTargetAtTime(0.05, ctx.currentTime, 0.8);
-      } else if (rainGain) {
-        rainGain.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.5);
+        rainGain.gain.setTargetAtTime(1, ctx.currentTime, 0.7);
+      } else {
+        if (rainGain) rainGain.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.4);
+        if (rainTimer) { clearInterval(rainTimer); rainTimer = null; }
       }
     },
     startMusic, stopMusic,
