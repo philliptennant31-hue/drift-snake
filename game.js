@@ -88,25 +88,29 @@
   // ---------- skins & hats ----------
   const SKINS = {
     drift:   { a: '#8fa3e0', b: '#b3a7e6', head: '#7b90d6' },
-    sunset:  { a: '#f2a36b', b: '#ef8f86', head: '#e08a52', unlock: { timed: 'meadow', n: 20 },   hint: 'eat 20 oranges in meadow' },
-    dragon:  { a: '#e87fa8', b: '#c86fc9', head: '#d96a97', unlock: { timed: 'sakura', n: 20 },   hint: 'eat 20 dragon fruit in sakura' },
-    retro:   { a: '#58b368', b: '#9ed36a', head: '#46a356', unlock: { timed: 'classic', n: 20 },  hint: 'eat 20 kiwis in classic' },
-    galaxy:  { a: '#5c6bc0', b: '#9575cd', head: '#4a58a8', unlock: { timed: 'midnight', n: 20 }, hint: 'eat 20 starfruit in midnight' },
-    deepsea: { a: '#26818e', b: '#4ab3a8', head: '#1f6f7b', unlock: { timed: 'tide', n: 20 },     hint: 'eat 20 blueberries in tide' },
-    ember:   { a: '#d97742', b: '#a8524a', head: '#c2632f', unlock: { timed: 'autumn', n: 20 },   hint: 'eat 20 persimmons in autumn' },
-    ink:     { a: '#3d3b38', b: '#6e6b66', head: '#2e2c2a', unlock: { timed: 'mono', n: 20 },     hint: 'eat 20 plums in mono' },
-    honey:   { a: '#e2b13c', b: '#f0d27a', head: '#d49f28', unlock: { stat: 'golden', n: 10 },    hint: 'find 10 golden apples' },
+    sunset:  { a: '#f2a36b', b: '#ef8f86', head: '#e08a52', unlock: { timed: 'meadow', n: 20 },   hint: 'eat 20 timed oranges in the meadow palette' },
+    dragon:  { a: '#e87fa8', b: '#c86fc9', head: '#d96a97', unlock: { timed: 'sakura', n: 20 },   hint: 'eat 20 timed dragon fruit in the sakura palette' },
+    retro:   { a: '#58b368', b: '#9ed36a', head: '#46a356', unlock: { timed: 'classic', n: 20 },  hint: 'eat 20 timed kiwis in the classic palette' },
+    galaxy:  { a: '#5c6bc0', b: '#9575cd', head: '#4a58a8', unlock: { timed: 'midnight', n: 20 }, hint: 'eat 20 timed starfruit in the midnight palette' },
+    deepsea: { a: '#26818e', b: '#4ab3a8', head: '#1f6f7b', unlock: { timed: 'tide', n: 20 },     hint: 'eat 20 timed blueberries in the tide palette' },
+    ember:   { a: '#d97742', b: '#a8524a', head: '#c2632f', unlock: { timed: 'autumn', n: 20 },   hint: 'eat 20 timed persimmons in the autumn palette' },
+    ink:     { a: '#3d3b38', b: '#6e6b66', head: '#2e2c2a', unlock: { timed: 'mono', n: 20 },     hint: 'eat 20 timed plums in the mono palette' },
+    honey:   { a: '#e2b13c', b: '#f0d27a', head: '#d49f28', unlock: { stat: 'golden', n: 10 },    hint: 'find 10 golden apples, any palette' },
   };
   const HATS = {
     none:     { label: 'none' },
-    sprout:   { label: 'sprout',   unlock: { stat: 'fruitTotal', n: 100 },  hint: 'eat 100 fruit (lifetime)' },
-    crown:    { label: 'crown',    unlock: { stat: 'ghostWins', n: 1 },     hint: 'outrun your ghost' },
-    flower:   { label: 'flower',   unlock: { stat: 'fruitTotal', n: 500 },  hint: 'eat 500 fruit (lifetime)' },
-    chef:     { label: 'chef',     unlock: { stat: 'perfect', n: 10 },      hint: 'catch 10 timed fruit at full value' },
-    bow:      { label: 'bow',      unlock: { stat: 'dailyStreak', n: 7 },   hint: 'keep a 7-day daily streak' },
-    mushroom: { label: 'mushroom', unlock: { stat: 'fruitTotal', n: 1500 }, hint: 'eat 1500 fruit (lifetime)' },
-    halo:     { label: 'halo',     unlock: { stat: 'clutch', n: 100 },      hint: 'catch 100 timed fruit with 1s left' },
+    sprout:   { label: 'sprout',   unlock: { stat: 'fruitTotal', n: 100 },  hint: 'eat 100 fruit, lifetime' },
+    crown:    { label: 'crown',    unlock: { stat: 'ghostWins', n: 1 },     hint: 'beat a ghost of your own best run' },
+    flower:   { label: 'flower',   unlock: { stat: 'fruitTotal', n: 500 },  hint: 'eat 500 fruit, lifetime' },
+    chef:     { label: 'chef',     unlock: { stat: 'perfect', n: 10 },      hint: 'catch 10 timed fruit at the full 5 points' },
+    bow:      { label: 'bow',      unlock: { stat: 'dailyStreak', n: 7 },   hint: 'play the daily 7 days in a row' },
+    mushroom: { label: 'mushroom', unlock: { stat: 'fruitTotal', n: 1500 }, hint: 'eat 1500 fruit, lifetime' },
+    halo:     { label: 'halo',     unlock: { stat: 'clutch', n: 100 },      hint: 'catch 100 timed fruit with 1 second left' },
   };
+  function unlockProgress(u) {
+    const cur = u.timed ? (prog.timed[u.timed] || 0) : (prog[u.stat] || 0);
+    return `${Math.min(cur, u.n)}/${u.n}`;
+  }
 
   // ---------- settings ----------
   const DEFAULTS = {
@@ -216,6 +220,8 @@
   // ---------- dom ----------
   const canvas = document.getElementById('game');
   const ctx = canvas.getContext('2d');
+  const oc = document.createElement('canvas');   // offscreen, for shadow compositing
+  const occ = oc.getContext('2d');
   const $ = id => document.getElementById(id);
   const overlays = { menu: $('menu'), ready: $('ready'), paused: $('paused'), gameover: $('gameover') };
   function showOverlay(name) {
@@ -425,6 +431,8 @@
     canvas.width = Math.round(w * dpr);
     canvas.height = Math.round(h * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    oc.width = canvas.width;
+    oc.height = canvas.height;
     drawGarden();
   }
 
@@ -697,6 +705,24 @@
     sync();
   });
 
+  // instant tooltips: any element with data-tip shows a styled bubble on hover
+  const tipEl = document.createElement('div');
+  tipEl.className = 'tip';
+  document.querySelector('.stage').appendChild(tipEl);
+  document.addEventListener('mouseover', e => {
+    const t = e.target.closest ? e.target.closest('[data-tip]') : null;
+    if (t && t.dataset.tip) {
+      const sr = document.querySelector('.stage').getBoundingClientRect();
+      const r = t.getBoundingClientRect();
+      tipEl.textContent = t.dataset.tip;
+      tipEl.style.left = (r.left - sr.left + r.width / 2) + 'px';
+      tipEl.style.top = (r.top - sr.top) + 'px';
+      tipEl.classList.add('show');
+    } else {
+      tipEl.classList.remove('show');
+    }
+  });
+
   // wardrobe (skins & hats live in progression, not settings)
   function refreshWardrobe() {
     document.querySelectorAll('#skinPills .pill').forEach(p => {
@@ -704,21 +730,28 @@
       const locked = !prog.skins.includes(k);
       p.classList.toggle('locked', locked);
       p.classList.toggle('active', !locked && prog.skin === k);
-      p.title = locked ? '🔒 ' + (SKINS[k].hint || '') : k;
+      p.dataset.tip = locked
+        ? `${k} · ${SKINS[k].hint} · ${unlockProgress(SKINS[k].unlock)}`
+        : `${k}${prog.skin === k ? ' · wearing' : ''}`;
     });
     document.querySelectorAll('#hatPills .pill').forEach(p => {
       const k = p.dataset.hat;
       const locked = k !== 'none' && !prog.hats.includes(k);
       p.classList.toggle('locked', locked);
       p.classList.toggle('active', !locked && prog.hat === k);
-      p.title = locked ? '🔒 ' + (HATS[k].hint || '') : HATS[k].label;
+      p.dataset.tip = locked
+        ? `${HATS[k].label} · ${HATS[k].hint} · ${unlockProgress(HATS[k].unlock)}`
+        : k === 'none' ? 'no hat' : `${HATS[k].label}${prog.hat === k ? ' · wearing' : ''}`;
     });
   }
   $('skinPills').addEventListener('click', e => {
     const b = e.target.closest('.pill');
     if (!b) return;
     const k = b.dataset.skin;
-    if (!prog.skins.includes(k)) { toast('locked · ' + SKINS[k].hint); return; }
+    if (!prog.skins.includes(k)) {
+      toast(`${SKINS[k].hint} · ${unlockProgress(SKINS[k].unlock)}`);
+      return;
+    }
     prog.skin = k;
     saveProg();
     refreshWardrobe();
@@ -728,7 +761,10 @@
     const b = e.target.closest('.pill');
     if (!b) return;
     const k = b.dataset.hat;
-    if (k !== 'none' && !prog.hats.includes(k)) { toast('locked · ' + HATS[k].hint); return; }
+    if (k !== 'none' && !prog.hats.includes(k)) {
+      toast(`${HATS[k].hint} · ${unlockProgress(HATS[k].unlock)}`);
+      return;
+    }
     prog.hat = k;
     saveProg();
     refreshWardrobe();
@@ -1274,6 +1310,96 @@
     ctx.restore();
   }
 
+  // dense point samples along the midpoint-quadratic smooth curve of a segment
+  function sampleSmooth(seg) {
+    if (seg.length === 1) return [{ x: seg[0].x, y: seg[0].y }];
+    const out = [{ x: seg[0].x, y: seg[0].y }];
+    let cur = seg[0];
+    for (let i = 1; i < seg.length - 1; i++) {
+      const m = { x: (seg[i].x + seg[i + 1].x) / 2, y: (seg[i].y + seg[i + 1].y) / 2 };
+      for (let s = 1; s <= 6; s++) {
+        const t = s / 6;
+        out.push({
+          x: (1 - t) * (1 - t) * cur.x + 2 * (1 - t) * t * seg[i].x + t * t * m.x,
+          y: (1 - t) * (1 - t) * cur.y + 2 * (1 - t) * t * seg[i].y + t * t * m.y,
+        });
+      }
+      cur = m;
+    }
+    out.push({ x: seg[seg.length - 1].x, y: seg[seg.length - 1].y });
+    return out;
+  }
+
+  // full-width polylines for the body plus circle stamps whose radius shrinks
+  // continuously with distance from the tail tip — no per-tick width jumps
+  function snakeGeometry(segs, W) {
+    const taperLen = cell * 2.2;
+    const maxR = W / 2, minR = W * 0.16;
+    const sampled = segs.map(sampleSmooth);
+    let carry = 0;
+    for (let si = sampled.length - 1; si >= 0; si--) {
+      const s = sampled[si];
+      for (let i = s.length - 1; i >= 0; i--) {
+        s[i].d = i === s.length - 1
+          ? carry
+          : s[i + 1].d + Math.hypot(s[i].x - s[i + 1].x, s[i].y - s[i + 1].y);
+      }
+      carry = s[0].d;   // the wrap gap adds no body length
+    }
+    const rad = d => minR + (maxR - minR) * Math.min(1, d / taperLen);
+    const body = [], stamps = [];
+    for (const s of sampled) {
+      let line = [];
+      for (let i = 0; i < s.length; i++) {
+        const p = s[i];
+        if (p.d >= taperLen) {
+          line.push(p);
+          continue;
+        }
+        if (i > 0 && s[i - 1].d >= taperLen) {
+          const a = s[i - 1];
+          const t = (a.d - taperLen) / (a.d - p.d);
+          const cut = { x: a.x + (p.x - a.x) * t, y: a.y + (p.y - a.y) * t };
+          line.push(cut);
+          stamps.push({ x: cut.x, y: cut.y, r: maxR });
+        }
+        if (line.length) { body.push(line); line = []; }
+        stamps.push({ x: p.x, y: p.y, r: rad(p.d) });
+        if (i < s.length - 1 && s[i + 1].d < taperLen) {
+          const q = s[i + 1];
+          const steps = Math.floor(Math.hypot(q.x - p.x, q.y - p.y) / 3);
+          for (let k = 1; k < steps; k++) {
+            const t = k / steps;
+            stamps.push({
+              x: p.x + (q.x - p.x) * t,
+              y: p.y + (q.y - p.y) * t,
+              r: rad(p.d + (q.d - p.d) * t),
+            });
+          }
+        }
+      }
+      if (line.length > 1) body.push(line);
+    }
+    return { body, stamps };
+  }
+
+  function renderRibbon(g, geom, W) {
+    g.lineCap = 'round';
+    g.lineJoin = 'round';
+    g.lineWidth = W;
+    for (const line of geom.body) {
+      g.beginPath();
+      g.moveTo(line[0].x, line[0].y);
+      for (let i = 1; i < line.length; i++) g.lineTo(line[i].x, line[i].y);
+      g.stroke();
+    }
+    for (const st of geom.stamps) {
+      g.beginPath();
+      g.arc(st.x, st.y, st.r, 0, Math.PI * 2);
+      g.fill();
+    }
+  }
+
   function drawSnakeBody(sim, t, now, isGhost) {
     const { pts, heads, facing } = snakePath(sim, t);
     const segs = splitWrapped(pts);
@@ -1285,55 +1411,47 @@
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
-    // soft shadow under the body
-    if (!isGhost) {
-      ctx.save();
-      ctx.translate(0, cell * 0.10);
-      ctx.strokeStyle = 'rgba(0,0,0,.10)';
-      for (const seg of segs) strokeSmooth(seg, W);
-      ctx.restore();
-    }
-
     if (isGhost) {
       ctx.strokeStyle = PAL.ghost;
-    } else if (dead) {
-      ctx.strokeStyle = PAL.dead;
+      for (const seg of segs) strokeSmooth(seg, W);
     } else {
-      const hp = pts[0], tp = pts[pts.length - 1];
-      const g = ctx.createLinearGradient(hp.x, hp.y, tp.x, tp.y);
-      g.addColorStop(0, skin.a);
-      g.addColorStop(1, skin.b);
-      ctx.strokeStyle = g;
-    }
+      const geom = snakeGeometry(segs, W);
 
-    const lastSeg = segs[segs.length - 1];
-    for (const seg of segs) {
-      if (!isGhost && seg === lastSeg && seg.length >= 4) {
-        // taper the tail over its final two links
-        const body = seg.slice(0, seg.length - 2);
-        strokeSmooth(body, W);
-        const n = seg.length;
-        ctx.beginPath();
-        ctx.lineWidth = W * 0.60;
-        ctx.moveTo(seg[n - 3].x, seg[n - 3].y);
-        ctx.lineTo(seg[n - 2].x, seg[n - 2].y);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.lineWidth = W * 0.42;
-        ctx.moveTo(seg[n - 2].x, seg[n - 2].y);
-        ctx.lineTo(seg[n - 1].x, seg[n - 1].y);
-        ctx.stroke();
+      // soft shadow: opaque on the offscreen, composited once at low alpha so
+      // overlapping stamps can't darken
+      const dpr = window.devicePixelRatio || 1;
+      occ.setTransform(dpr, 0, 0, dpr, 0, 0);
+      occ.clearRect(0, 0, cols * cell, rows * cell);
+      occ.strokeStyle = occ.fillStyle = '#000';
+      renderRibbon(occ, geom, W);
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.globalAlpha = 0.10;
+      ctx.drawImage(oc, 0, cell * 0.10 * dpr);
+      ctx.restore();
+
+      let paint;
+      if (dead) {
+        paint = PAL.dead;
       } else {
-        strokeSmooth(seg, W);
+        const hp = pts[0], tp = pts[pts.length - 1];
+        paint = ctx.createLinearGradient(hp.x, hp.y, tp.x, tp.y);
+        paint.addColorStop(0, skin.a);
+        paint.addColorStop(1, skin.b);
       }
-    }
+      ctx.strokeStyle = ctx.fillStyle = paint;
+      renderRibbon(ctx, geom, W);
 
-    // belly stripe
-    if (!isGhost && !dead) {
-      ctx.strokeStyle = 'rgba(255,255,255,.20)';
-      for (const seg of segs) {
-        const body = seg === lastSeg && seg.length >= 4 ? seg.slice(0, seg.length - 2) : seg;
-        if (body.length > 1) strokeSmooth(body, W * 0.28);
+      if (!dead) {
+        ctx.strokeStyle = 'rgba(255,255,255,.20)';
+        ctx.lineWidth = W * 0.28;
+        for (const line of geom.body) {
+          if (line.length < 2) continue;
+          ctx.beginPath();
+          ctx.moveTo(line[0].x, line[0].y);
+          for (let i = 1; i < line.length; i++) ctx.lineTo(line[i].x, line[i].y);
+          ctx.stroke();
+        }
       }
     }
 

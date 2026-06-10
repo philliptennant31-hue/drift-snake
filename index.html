@@ -66,14 +66,14 @@
       <div class="opt-row">
         <div class="label">mood</div>
         <div class="pills" data-group="mode">
-          <button class="pill" data-v="classic">classic</button>
-          <button class="pill" data-v="zen">zen</button>
-          <button class="pill" data-v="rush">rush</button>
-          <button class="pill" data-v="trial">trial</button>
+          <button class="pill" data-v="classic" data-tip="walls and collisions · the classic game">classic</button>
+          <button class="pill" data-v="zen" data-tip="wraps around · nothing can hurt you">zen</button>
+          <button class="pill" data-v="rush" data-tip="every fruit is timed · points = seconds left">rush</button>
+          <button class="pill" data-v="trial" data-tip="best score in 60 seconds">trial</button>
         </div>
       </div>
       <button class="play-btn" id="playBtn">play</button>
-      <button class="play-btn small daily" id="dailyBtn">daily</button>
+      <button class="play-btn small daily" id="dailyBtn" data-tip="the same board for everyone, every day">daily</button>
     </div>
 
     <div class="tab-panel hidden" id="tab-setup">
@@ -87,7 +87,7 @@
           </div>
         </div>
         <div class="opt-row">
-          <div class="label">meadow</div>
+          <div class="label">board</div>
           <div class="pills" data-group="size">
             <button class="pill" data-v="small">snug</button>
             <button class="pill" data-v="normal">cozy</button>
@@ -115,13 +115,13 @@
       <div class="opt-row">
         <div class="label">palette</div>
         <div class="pills" data-group="theme">
-          <button class="pill dot" data-v="meadow" title="meadow" style="background:#8fa3e0"></button>
-          <button class="pill dot" data-v="midnight" title="midnight" style="background:#211f2b"></button>
-          <button class="pill dot" data-v="classic" title="classic" style="background:#aad751"></button>
-          <button class="pill dot" data-v="sakura" title="sakura" style="background:#e8aec4"></button>
-          <button class="pill dot" data-v="tide" title="tide" style="background:#5fa8a0"></button>
-          <button class="pill dot" data-v="autumn" title="autumn" style="background:#c97b4a"></button>
-          <button class="pill dot" data-v="mono" title="mono" style="background:#8a8782"></button>
+          <button class="pill dot" data-v="meadow" data-tip="meadow · the lofi original" style="background:#8fa3e0"></button>
+          <button class="pill dot" data-v="midnight" data-tip="midnight · fireflies after dark" style="background:#211f2b"></button>
+          <button class="pill dot" data-v="classic" data-tip="classic · retro green" style="background:#aad751"></button>
+          <button class="pill dot" data-v="sakura" data-tip="sakura · falling petals" style="background:#e8aec4"></button>
+          <button class="pill dot" data-v="tide" data-tip="tide · ocean air" style="background:#5fa8a0"></button>
+          <button class="pill dot" data-v="autumn" data-tip="autumn · maple leaves" style="background:#c97b4a"></button>
+          <button class="pill dot" data-v="mono" data-tip="mono · ink on paper" style="background:#8a8782"></button>
         </div>
       </div>
       <div class="opt-row">
@@ -203,11 +203,11 @@
     <p class="sub" id="goBest">best 0</p>
     <div class="btn-row">
       <button class="play-btn small" id="againBtn">new run</button>
-      <button class="play-btn small" id="raceBtn">race your ghost</button>
+      <button class="play-btn small" id="raceBtn" data-tip="replay this exact board against a ghost of your best run">race your ghost</button>
     </div>
     <div class="btn-row">
-      <button class="ghost-btn" id="copyBtn">copy result</button>
-      <button class="ghost-btn" id="cardBtn">save card</button>
+      <button class="ghost-btn" id="copyBtn" data-tip="copy your score + a challenge link, ready to paste anywhere">copy result</button>
+      <button class="ghost-btn" id="cardBtn" data-tip="download a score-card image for sharing">save card</button>
       <button class="ghost-btn" id="menuBtn">back to menu</button>
     </div>
   </div>

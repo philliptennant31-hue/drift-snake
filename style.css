@@ -100,15 +100,24 @@ canvas {
   pointer-events: none;
   transition: opacity .35s ease, visibility 0s linear .35s;
   text-align: center;
-  padding: 18px;
+  padding: 14px;
   overflow-y: auto;
 }
+.overlay#menu { gap: 10px; }
 .overlay.show {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
   transition: opacity .35s ease;
 }
+.overlay h1 { font-size: 26px; }
+.overlay, .tab-panel { scrollbar-width: thin; scrollbar-color: var(--ink-soft) transparent; }
+.overlay::-webkit-scrollbar, .tab-panel::-webkit-scrollbar { width: 5px; }
+.overlay::-webkit-scrollbar-thumb, .tab-panel::-webkit-scrollbar-thumb {
+  background: var(--ink-soft);
+  border-radius: 999px;
+}
+.overlay::-webkit-scrollbar-track, .tab-panel::-webkit-scrollbar-track { background: transparent; }
 /* center content when it fits, scroll cleanly from the top when it doesn't */
 .overlay { justify-content: flex-start; }
 .overlay::before, .overlay::after { content: ''; margin: auto; flex-shrink: 0; }
@@ -157,15 +166,39 @@ canvas {
   transition: all .15s ease;
 }
 .tab.active { background: var(--snake-a); color: #fff; }
+/* fixed height so the tab bar never shifts; content centers when it fits
+   and scrolls inside when it doesn't */
 .tab-panel {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  min-height: 130px;
-  justify-content: center;
+  height: 232px;
+  overflow-y: auto;
+  justify-content: flex-start;
   width: 100%;
 }
+.tab-panel::before, .tab-panel::after { content: ''; margin: auto; flex-shrink: 0; }
+.tab-panel > * { flex-shrink: 0; }
+
+.tip {
+  position: absolute;
+  background: var(--card);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  box-shadow: 0 6px 18px rgba(0,0,0,.16);
+  pointer-events: none;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translate(-50%, calc(-100% - 9px));
+  transition: opacity .1s ease;
+  z-index: 30;
+}
+.tip.show { opacity: 1; }
 .play-btn.daily { background: var(--card); color: var(--snake-a); box-shadow: 0 3px 10px rgba(0,0,0,.10); }
 
 .stat-chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
