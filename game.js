@@ -61,11 +61,29 @@
       ghost: 'rgba(79,104,104,.26)', overlay: 'rgba(238,244,244,.84)',
       uiSnakeA: '#5fa8a0', uiSnakeB: '#8ec3b0',
     },
+    autumn: {
+      bg: '#f6ede1', bgDeep: '#ecdfc9', boardA: '#e9d8ba', boardB: '#e1ceab',
+      fruit: '#d9583b', fruitHi: '#eda07f', leaf: '#a8893f', stem: '#7a5230',
+      bonusRing: '#c97b3a',
+      ink: '#6b5a48', inkSoft: '#a8927a', card: '#fdf8f0',
+      eyeW: '#ffffff', eyeP: '#4f4236', tongue: '#d98a7c', dead: '#b5a892',
+      ghost: 'rgba(107,90,72,.26)', overlay: 'rgba(246,237,225,.84)',
+      uiSnakeA: '#c97b4a', uiSnakeB: '#a8694f',
+    },
+    mono: {
+      bg: '#f2f1ee', bgDeep: '#e4e2dd', boardA: '#e7e5e0', boardB: '#dedbd5',
+      fruit: '#8a8782', fruitHi: '#bcb9b3', leaf: '#9a978f', stem: '#7a776f',
+      bonusRing: '#6e6b66',
+      ink: '#4a4845', inkSoft: '#94918a', card: '#fbfaf8',
+      eyeW: '#ffffff', eyeP: '#33312e', tongue: '#b0867e', dead: '#b6b3ac',
+      ghost: 'rgba(74,72,69,.22)', overlay: 'rgba(242,241,238,.85)',
+      uiSnakeA: '#5a5854', uiSnakeB: '#8a8782',
+    },
   };
 
   // each palette has its own timed fruit
-  const FRUIT_KIND = { meadow: 'orange', sakura: 'dragonfruit', classic: 'kiwi', midnight: 'starfruit', tide: 'blueberry' };
-  const FRUIT_NAME = { orange: 'oranges', dragonfruit: 'dragon fruit', kiwi: 'kiwis', starfruit: 'starfruit', blueberry: 'blueberries' };
+  const FRUIT_KIND = { meadow: 'orange', sakura: 'dragonfruit', classic: 'kiwi', midnight: 'starfruit', tide: 'blueberry', autumn: 'persimmon', mono: 'plum' };
+  const FRUIT_NAME = { orange: 'oranges', dragonfruit: 'dragon fruit', kiwi: 'kiwis', starfruit: 'starfruit', blueberry: 'blueberries', persimmon: 'persimmons', plum: 'plums' };
 
   // ---------- skins & hats ----------
   const SKINS = {
@@ -75,14 +93,19 @@
     retro:   { a: '#58b368', b: '#9ed36a', head: '#46a356', unlock: { timed: 'classic', n: 20 },  hint: 'eat 20 kiwis in classic' },
     galaxy:  { a: '#5c6bc0', b: '#9575cd', head: '#4a58a8', unlock: { timed: 'midnight', n: 20 }, hint: 'eat 20 starfruit in midnight' },
     deepsea: { a: '#26818e', b: '#4ab3a8', head: '#1f6f7b', unlock: { timed: 'tide', n: 20 },     hint: 'eat 20 blueberries in tide' },
+    ember:   { a: '#d97742', b: '#a8524a', head: '#c2632f', unlock: { timed: 'autumn', n: 20 },   hint: 'eat 20 persimmons in autumn' },
+    ink:     { a: '#3d3b38', b: '#6e6b66', head: '#2e2c2a', unlock: { timed: 'mono', n: 20 },     hint: 'eat 20 plums in mono' },
+    honey:   { a: '#e2b13c', b: '#f0d27a', head: '#d49f28', unlock: { stat: 'golden', n: 10 },    hint: 'find 10 golden apples' },
   };
   const HATS = {
-    none:   { label: 'none' },
-    sprout: { label: 'sprout', unlock: { stat: 'fruitTotal', n: 100 }, hint: 'eat 100 fruit (lifetime)' },
-    crown:  { label: 'crown',  unlock: { stat: 'ghostWins', n: 1 },    hint: 'outrun your ghost' },
-    flower: { label: 'flower', unlock: { stat: 'fruitTotal', n: 500 }, hint: 'eat 500 fruit (lifetime)' },
-    chef:   { label: 'chef',   unlock: { stat: 'perfect', n: 10 },     hint: 'catch 10 timed fruit at full value' },
-    halo:   { label: 'halo',   unlock: { stat: 'clutch', n: 100 },     hint: 'catch 100 timed fruit with 1s left' },
+    none:     { label: 'none' },
+    sprout:   { label: 'sprout',   unlock: { stat: 'fruitTotal', n: 100 },  hint: 'eat 100 fruit (lifetime)' },
+    crown:    { label: 'crown',    unlock: { stat: 'ghostWins', n: 1 },     hint: 'outrun your ghost' },
+    flower:   { label: 'flower',   unlock: { stat: 'fruitTotal', n: 500 },  hint: 'eat 500 fruit (lifetime)' },
+    chef:     { label: 'chef',     unlock: { stat: 'perfect', n: 10 },      hint: 'catch 10 timed fruit at full value' },
+    bow:      { label: 'bow',      unlock: { stat: 'dailyStreak', n: 7 },   hint: 'keep a 7-day daily streak' },
+    mushroom: { label: 'mushroom', unlock: { stat: 'fruitTotal', n: 1500 }, hint: 'eat 1500 fruit (lifetime)' },
+    halo:     { label: 'halo',     unlock: { stat: 'clutch', n: 100 },      hint: 'catch 100 timed fruit with 1s left' },
   };
 
   // ---------- settings ----------
@@ -98,8 +121,9 @@
   // ---------- progression ----------
   const PROG_DEFAULT = {
     fruitTotal: 0,
-    timed: { meadow: 0, sakura: 0, classic: 0, midnight: 0, tide: 0 },
-    clutch: 0, perfect: 0, ghostWins: 0,
+    timed: { meadow: 0, sakura: 0, classic: 0, midnight: 0, tide: 0, autumn: 0, mono: 0 },
+    clutch: 0, perfect: 0, ghostWins: 0, golden: 0,
+    dailyStreak: 0, dailyLast: 0, dailyPlays: 0,
     skins: ['drift'], hats: [], skin: 'drift', hat: 'none',
   };
   let prog = { ...PROG_DEFAULT, timed: { ...PROG_DEFAULT.timed }, skins: ['drift'], hats: [] };
@@ -158,11 +182,23 @@
     r.setProperty('--ink-soft', PAL.inkSoft);
     r.setProperty('--card', PAL.card);
     r.setProperty('--overlay-bg', PAL.overlay);
+    const tc = document.querySelector('meta[name="theme-color"]');
+    if (tc) tc.setAttribute('content', PAL.bg);
     Sound.setMood(settings.theme);
   }
 
+  // ---------- daily challenge ----------
+  // same seed for everyone, everywhere, derived from the UTC date
+  const DAILY_EPOCH = Date.UTC(2026, 5, 10);
+  const DAILY_CFG = { mode: 'classic', pace: 'normal', size: 'normal', layout: 'wide', fruits: 'single' };
+  const dailyIndex = () => Math.floor((Date.now() - DAILY_EPOCH) / 86400000) + 1;
+  const dailySeed = n => (Math.imul(n, 2654435761) + 97531) >>> 0;
+  let daily = null;            // {n} while a daily run is active
+  let stashedSettings = null;  // user's own settings, restored after a daily
+
   // ---------- run state ----------
   let cols = 17, rows = 13, cell = 32, stepMs = 135, ttlTicks = 37, trialTicks = 444;
+  let runStats = { fruit: 0, timed: 0, golden: 0 };
   let player = null;
   let ghost = null;           // {sim, moves, idx, score, diedAt}
   let recMoves = [];
@@ -229,7 +265,10 @@
   function newFruit(sim) {
     const c = freeCell(sim);
     if (!c) return null;
-    return settings.mode === 'rush' ? { x: c.x, y: c.y, ticksLeft: ttlTicks } : { x: c.x, y: c.y };
+    if (settings.mode === 'rush') return { x: c.x, y: c.y, ticksLeft: ttlTicks };
+    const f = { x: c.x, y: c.y };
+    if (sim.rng() < 0.04) f.golden = true;   // rare golden apple, worth 3
+    return f;
   }
 
   function makeSim(seed) {
@@ -292,8 +331,9 @@
         sim.score += pts;
         ev.bonus = { x: nx, y: ny, pts };
       } else {
-        sim.score++;
-        ev.ate = { x: nx, y: ny };
+        const pts = f.golden ? 3 : 1;
+        sim.score += pts;
+        ev.ate = { x: nx, y: ny, golden: !!f.golden, pts };
       }
       const nf = newFruit(sim);
       if (nf) sim.fruits.push(nf);
@@ -416,6 +456,7 @@
       if (saved && saved.m) ghost = { sim: makeSim(seed), moves: saved.m, idx: 0, score: saved.s, diedAt: 0 };
     }
     particles = []; popups = []; eatRipple = null; lastBonusSecs = null;
+    runStats = { fruit: 0, timed: 0, golden: 0 };
     acc = 0;
     endCause = 'death';
     state = 'ready';
@@ -423,9 +464,18 @@
     showOverlay('ready');
   }
 
+  function startDaily() {
+    if (!stashedSettings) stashedSettings = { ...settings };
+    Object.assign(settings, DAILY_CFG);
+    daily = { n: dailyIndex() };
+    startRun(dailySeed(daily.n));
+  }
+
   function onTimedCatch(pts) {
     prog.timed[settings.theme] = (prog.timed[settings.theme] || 0) + 1;
     prog.fruitTotal++;
+    runStats.fruit++;
+    runStats.timed++;
     if (pts >= 5) prog.perfect++;
     if (pts <= 1) prog.clutch++;
     saveProg();
@@ -440,13 +490,21 @@
 
     if (ev.ate) {
       prog.fruitTotal++;
+      runStats.fruit++;
+      if (ev.ate.golden) {
+        prog.golden++;
+        runStats.golden++;
+        popups.push({ x: (ev.ate.x + 0.5) * cell, y: ev.ate.y * cell, text: '+3', t0: now });
+        Sound.bonusEat(2);
+      } else {
+        Sound.pop(player.score);
+      }
       saveProg();
       drawGarden();
       checkUnlocks();
       updateScoreUI();
-      Sound.pop(player.score);
       eatRipple = { x: ev.ate.x, y: ev.ate.y, t0: now };
-      burst(ev.ate.x, ev.ate.y, [PAL.fruit, PAL.leaf]);
+      burst(ev.ate.x, ev.ate.y, ev.ate.golden ? ['#e2b13c', '#f0d27a'] : [PAL.fruit, PAL.leaf]);
     }
     if (ev.bonusSpawned) Sound.bonusSpawn();
     if (ev.bonusExpired) {
@@ -488,6 +546,17 @@
       saveProg();
       checkUnlocks();
     }
+    if (daily) {
+      const dk = 'drift-daily:' + daily.n;
+      if (player.score > +(localStorage.getItem(dk) || 0)) localStorage.setItem(dk, player.score);
+      if (prog.dailyLast !== daily.n) {
+        prog.dailyStreak = prog.dailyLast === daily.n - 1 ? prog.dailyStreak + 1 : 1;
+        prog.dailyLast = daily.n;
+        prog.dailyPlays++;
+        saveProg();
+        checkUnlocks();
+      }
+    }
     updateScoreUI();
 
     setTimeout(() => {
@@ -500,12 +569,13 @@
         player.score > prevBest && player.score > 0 ? 'new best!' :
         cause === 'time' ? 'time!' : 'oh well';
       $('goScore').textContent = player.score;
-      $('goBest').textContent = 'best ' + getBest() + ' · seed ' + seedStr(runSeed);
+      $('goBest').textContent =
+        (daily ? `daily #${daily.n} · ` : '') + 'best ' + getBest() + ' · seed ' + seedStr(runSeed);
       const ch = !!challenge;
-      $('againBtn').textContent = ch ? 'try again' : 'new run';
+      $('againBtn').textContent = ch ? 'try again' : daily ? 'once more' : 'new run';
       $('raceBtn').classList.toggle('hidden', ch);
       $('menuBtn').textContent = ch ? 'leave challenge' : 'back to menu';
-      $('shareBtn').textContent = 'share challenge';
+      $('copyBtn').textContent = 'copy result';
       showOverlay('gameover');
     }, 700);
   }
@@ -575,19 +645,31 @@
     if (k === 'Enter' && state === 'gameover') $('againBtn').click();
   });
 
-  let touchStart = null;
-  canvas.addEventListener('touchstart', e => {
+  const stage = document.querySelector('.stage');
+  let touchStart = null, touchMoved = false;
+  stage.addEventListener('touchstart', e => {
     touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    touchMoved = false;
   }, { passive: true });
-  canvas.addEventListener('touchmove', e => {
+  stage.addEventListener('touchmove', e => {
     if (!touchStart) return;
     const dx = e.touches[0].clientX - touchStart.x;
     const dy = e.touches[0].clientY - touchStart.y;
     if (Math.abs(dx) < 24 && Math.abs(dy) < 24) return;
     const d = Math.abs(dx) > Math.abs(dy) ? { x: Math.sign(dx), y: 0 } : { x: 0, y: Math.sign(dy) };
     touchStart = null;
+    touchMoved = true;
     if (state === 'ready') tryStart(d);
     else if (state === 'playing') queueDir(d);
+  }, { passive: true });
+  stage.addEventListener('touchend', e => {
+    // a tap (no swipe) on the bare board pauses
+    if (!touchMoved && e.target === canvas && state === 'playing') {
+      state = 'paused';
+      Sound.pause();
+      showOverlay('paused');
+    }
+    touchStart = null;
   }, { passive: true });
 
   document.addEventListener('visibilitychange', () => {
@@ -665,7 +747,11 @@
   }
 
   $('playBtn').addEventListener('click', () => startRun(challenge ? challenge.seed : randomSeed()));
-  $('againBtn').addEventListener('click', () => startRun(challenge ? challenge.seed : randomSeed()));
+  $('dailyBtn').addEventListener('click', () => startDaily());
+  $('againBtn').addEventListener('click', () => {
+    if (daily) startRun(dailySeed(daily.n));
+    else startRun(challenge ? challenge.seed : randomSeed());
+  });
   $('raceBtn').addEventListener('click', () => startRun(runSeed));
   function backToMenu() {
     if (challenge) {
@@ -673,18 +759,25 @@
       history.replaceState(null, '', location.pathname);
       $('challengeNote').classList.add('hidden');
     }
+    if (stashedSettings) {
+      settings = stashedSettings;
+      stashedSettings = null;
+      applyTheme();
+    }
+    daily = null;
     player = null; ghost = null;
     state = 'menu';
     configureBoard();
     updateScoreUI();
     refreshWardrobe();
+    updateDailyBtn();
     showOverlay('menu');
   }
   $('menuBtn').addEventListener('click', backToMenu);
   $('resumeBtn').addEventListener('click', () => { state = 'playing'; lastTime = 0; showOverlay(null); });
   $('pauseMenuBtn').addEventListener('click', backToMenu);
 
-  $('shareBtn').addEventListener('click', () => {
+  function shareURL() {
     const u = new URL(location.origin + location.pathname);
     u.searchParams.set('m', settings.mode);
     u.searchParams.set('p', settings.pace);
@@ -693,10 +786,147 @@
     u.searchParams.set('f', settings.fruits);
     u.searchParams.set('seed', seedStr(runSeed));
     u.searchParams.set('goal', player.score);
-    navigator.clipboard.writeText(u.toString()).then(() => {
-      $('shareBtn').textContent = 'copied ✓';
-    }).catch(() => {
-      $('shareBtn').textContent = u.toString();
+    return u.toString();
+  }
+
+  function resultText() {
+    const lines = [];
+    lines.push(daily ? `drift · daily #${daily.n} 🌱` : `drift · ${settings.mode}`);
+    const bits = [`score ${player.score}`, `🍎 ${runStats.fruit}`];
+    if (runStats.timed) bits.push(`⏱ ${runStats.timed}`);
+    if (runStats.golden) bits.push(`✨ ${runStats.golden}`);
+    if (daily && prog.dailyStreak > 1) bits.push(`🔥 ${prog.dailyStreak} days`);
+    lines.push(bits.join(' · '));
+    lines.push(`beat me → ${shareURL()}`);
+    return lines.join('\n');
+  }
+
+  $('copyBtn').addEventListener('click', () => {
+    navigator.clipboard.writeText(resultText()).then(() => {
+      $('copyBtn').textContent = 'copied ✓';
+    }).catch(() => {});
+  });
+
+  $('cardBtn').addEventListener('click', () => {
+    const a = document.createElement('a');
+    a.href = drawCard();
+    a.download = `drift-${daily ? 'daily-' + daily.n : seedStr(runSeed)}.png`;
+    a.click();
+  });
+
+  function updateDailyBtn() {
+    const n = dailyIndex();
+    const dayBest = +(localStorage.getItem('drift-daily:' + n) || 0);
+    $('dailyBtn').textContent = prog.dailyLast === n ? `daily #${n} · ✓ ${dayBest}` : `daily #${n}`;
+  }
+
+  // pastel share-card image (1200x630, social-preview sized)
+  function drawCard() {
+    const W = 1200, H = 630;
+    const c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    const x = c.getContext('2d');
+    x.fillStyle = PAL.bg;
+    x.fillRect(0, 0, W, H);
+    x.fillStyle = PAL.boardA;
+    x.beginPath();
+    if (x.roundRect) x.roundRect(60, 60, W - 120, H - 120, 40); else x.rect(60, 60, W - 120, H - 120);
+    x.fill();
+
+    x.textAlign = 'center';
+    x.fillStyle = PAL.inkSoft;
+    x.font = '700 44px Quicksand, sans-serif';
+    x.fillText('drift · snake', W / 2, 160);
+    x.fillStyle = PAL.ink;
+    x.font = '700 150px Quicksand, sans-serif';
+    x.fillText(player ? player.score : 0, W / 2, 330);
+    x.fillStyle = PAL.inkSoft;
+    x.font = '700 36px Quicksand, sans-serif';
+    const sub = daily ? `daily #${daily.n}` : `${settings.mode} · seed ${seedStr(runSeed)}`;
+    x.fillText(sub, W / 2, 390);
+    const bits = [`${runStats.fruit} fruit`];
+    if (runStats.timed) bits.push(`${runStats.timed} timed`);
+    if (runStats.golden) bits.push(`${runStats.golden} golden`);
+    if (daily && prog.dailyStreak > 1) bits.push(`${prog.dailyStreak}-day streak`);
+    x.fillText(bits.join(' · '), W / 2, 440);
+
+    const rng = mulberry32(((player ? player.score : 0) + 7) * 31);
+    for (let i = 0; i < 22; i++) {
+      const fx = 140 + i * ((W - 280) / 21) + rng() * 10;
+      const stemH = 26 + rng() * 22;
+      x.strokeStyle = '#7da379';
+      x.lineWidth = 3;
+      x.beginPath();
+      x.moveTo(fx, H - 90);
+      x.quadraticCurveTo(fx + (rng() - 0.5) * 10, H - 90 - stemH * 0.6, fx, H - 90 - stemH);
+      x.stroke();
+      x.fillStyle = FLOWER_COLORS[Math.floor(rng() * FLOWER_COLORS.length)];
+      for (let p = 0; p < 5; p++) {
+        const a = (p / 5) * Math.PI * 2 + rng();
+        x.beginPath();
+        x.arc(fx + Math.cos(a) * 7, H - 90 - stemH + Math.sin(a) * 7, 5.5, 0, Math.PI * 2);
+        x.fill();
+      }
+      x.fillStyle = '#f8e9a1';
+      x.beginPath();
+      x.arc(fx, H - 90 - stemH, 4, 0, Math.PI * 2);
+      x.fill();
+    }
+    return c.toDataURL('image/png');
+  }
+
+  // ---------- stats panel ----------
+  function bar(cur, max) {
+    const pct = Math.min(100, Math.round((cur / max) * 100));
+    return `<div class="bar"><div class="bar-fill" style="width:${pct}%"></div></div><span class="bar-num">${Math.min(cur, max)}/${max}</span>`;
+  }
+  function renderStats() {
+    const totals = [
+      ['fruit', prog.fruitTotal], ['blooms', Math.floor(prog.fruitTotal / 10)],
+      ['golden', prog.golden], ['perfect', prog.perfect], ['clutch', prog.clutch],
+      ['ghost wins', prog.ghostWins], ['daily streak', prog.dailyStreak],
+    ];
+    let h = '<div class="stat-chips">' +
+      totals.map(([k, v]) => `<div class="stat-chip"><b>${v}</b><span>${k}</span></div>`).join('') +
+      '</div>';
+
+    h += '<div class="label" style="margin-top:10px">snakes</div><div class="stat-list">';
+    for (const k in SKINS) {
+      const u = SKINS[k].unlock;
+      if (!u) continue;
+      const done = prog.skins.includes(k);
+      const cur = u.timed ? (prog.timed[u.timed] || 0) : (prog[u.stat] || 0);
+      h += `<div class="stat-row${done ? ' done' : ''}">` +
+        `<i class="swatch" style="background:linear-gradient(135deg,${SKINS[k].a},${SKINS[k].b})"></i>` +
+        `<span class="stat-name">${k}</span>` +
+        (done ? '<span class="check">✓</span>' : bar(cur, u.n)) + '</div>';
+    }
+    h += '</div><div class="label" style="margin-top:10px">hats</div><div class="stat-list">';
+    for (const k in HATS) {
+      const u = HATS[k].unlock;
+      if (!u) continue;
+      const done = prog.hats.includes(k);
+      const cur = prog[u.stat] || 0;
+      h += `<div class="stat-row${done ? ' done' : ''}">` +
+        `<span class="stat-name">${HATS[k].label}</span>` +
+        (done ? '<span class="check">✓</span>' : bar(cur, u.n)) + '</div>';
+    }
+    h += '</div><div class="label" style="margin-top:10px">bests · current setup</div><div class="stat-chips">';
+    for (const m of ['classic', 'rush', 'trial']) {
+      const key = 'drift-best:' + [m, settings.pace, settings.size, settings.layout, settings.fruits].join(':');
+      h += `<div class="stat-chip"><b>${localStorage.getItem(key) || 0}</b><span>${m}</span></div>`;
+    }
+    h += '</div>';
+    $('tab-stats').innerHTML = h;
+  }
+
+  // ---------- menu tabs ----------
+  document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x === t));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('hidden', p.id !== 'tab-' + t.dataset.tab));
+      if (t.dataset.tab === 'stats') renderStats();
+      Sound.ui();
     });
   });
 
@@ -763,20 +993,26 @@
     ctx.fill();
   }
 
-  function drawApple(fx, fy, now) {
+  function drawApple(fx, fy, now, golden) {
     const c = center({ x: fx, y: fy });
     const bob = Math.sin(now / 320 + fx * 1.7 + fy) * cell * 0.045;
     const r = cell * 0.31;
     const y = c.y + bob;
     fruitShadow(c.x, c.y, r);
-    ctx.fillStyle = PAL.fruit;
+    ctx.fillStyle = golden ? '#e2b13c' : PAL.fruit;
     ctx.beginPath();
     ctx.arc(c.x, y, r, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = PAL.fruitHi;
+    ctx.fillStyle = golden ? '#f6e3a8' : PAL.fruitHi;
     ctx.beginPath();
     ctx.arc(c.x - r * 0.32, y - r * 0.32, r * 0.30, 0, Math.PI * 2);
     ctx.fill();
+    if (golden) {
+      const tw = 0.5 + 0.5 * Math.sin(now / 220 + fx);
+      ctx.fillStyle = `rgba(255,250,220,${0.4 + tw * 0.6})`;
+      starPath(c.x + r * 0.9, y - r * 1.1, r * (0.22 + tw * 0.12), r * 0.07, 4);
+      ctx.fill();
+    }
     ctx.strokeStyle = PAL.stem;
     ctx.lineWidth = Math.max(1.5, cell * 0.045);
     ctx.lineCap = 'round';
@@ -850,6 +1086,37 @@
       ctx.fill();
       ctx.fillStyle = '#f9e6a0';
       ctx.beginPath(); ctx.arc(c.x, c.y, r * 0.22, 0, Math.PI * 2); ctx.fill();
+    } else if (kind === 'persimmon') {
+      ctx.fillStyle = '#e8763a';
+      ctx.beginPath(); ctx.ellipse(c.x, c.y + r * 0.08, r, r * 0.85, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#f3a06b';
+      ctx.beginPath(); ctx.arc(c.x - r * 0.3, c.y - r * 0.2, r * 0.26, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#7c9a55';
+      for (let i = 0; i < 4; i++) {
+        const a = (i / 4) * Math.PI * 2 + Math.PI / 4;
+        ctx.save();
+        ctx.translate(c.x, c.y - r * 0.62);
+        ctx.rotate(a);
+        ctx.beginPath(); ctx.ellipse(r * 0.22, 0, r * 0.26, r * 0.12, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      }
+    } else if (kind === 'plum') {
+      ctx.fillStyle = '#7d6b9e';
+      ctx.beginPath(); ctx.arc(c.x, c.y, r, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#665687';
+      ctx.lineWidth = Math.max(1, cell * 0.035);
+      ctx.beginPath();
+      ctx.moveTo(c.x, c.y - r * 0.85);
+      ctx.quadraticCurveTo(c.x - r * 0.35, c.y, c.x - r * 0.15, c.y + r * 0.8);
+      ctx.stroke();
+      ctx.fillStyle = '#a99cc4';
+      ctx.beginPath(); ctx.arc(c.x + r * 0.3, c.y - r * 0.3, r * 0.24, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = PAL.stem;
+      ctx.lineWidth = Math.max(1.5, cell * 0.045);
+      ctx.beginPath();
+      ctx.moveTo(c.x, c.y - r * 0.9);
+      ctx.lineTo(c.x + r * 0.12, c.y - r * 1.25);
+      ctx.stroke();
     } else if (kind === 'blueberry') {
       ctx.fillStyle = '#5c6bc0';
       ctx.beginPath(); ctx.arc(c.x, c.y, r, 0, Math.PI * 2); ctx.fill();
@@ -1145,13 +1412,18 @@
   }
 
   // ---------- ambient particles ----------
-  const AMB_RATE = { meadow: 1600, sakura: 950, midnight: 1700, tide: 1100 };
+  const AMB_RATE = { meadow: 1600, sakura: 950, midnight: 1700, tide: 1100, autumn: 1200, mono: 2200 };
   function spawnAmbient(now) {
     const W = cols * cell, H = rows * cell;
     const theme = settings.theme;
-    if (theme === 'meadow' || theme === 'sakura') {
+    if (theme === 'meadow' || theme === 'sakura' || theme === 'autumn') {
       if (ambient.length >= 12) return;
-      ambient.push({ kind: theme === 'sakura' ? 'petal' : 'leaf', x: Math.random() * W, y: -cell * 0.4, phase: Math.random() * 6.28 });
+      const kind = theme === 'sakura' ? 'petal' : 'leaf';
+      const color = theme === 'autumn' ? ['#d98a4a', '#c2632f', '#b8923f'][Math.floor(Math.random() * 3)] : null;
+      ambient.push({ kind, color, x: Math.random() * W, y: -cell * 0.4, phase: Math.random() * 6.28 });
+    } else if (theme === 'mono') {
+      if (ambient.length >= 14) return;
+      ambient.push({ kind: 'dust', x: Math.random() * W, y: -cell * 0.2, phase: Math.random() * 6.28 });
     } else if (theme === 'midnight') {
       if (ambient.filter(a => a.kind === 'firefly').length >= 6) return;
       ambient.push({ kind: 'firefly', x: Math.random() * W, y: Math.random() * H, phase: Math.random() * 6.28, born: now });
@@ -1179,11 +1451,20 @@
         ctx.translate(x, a.y);
         ctx.rotate(Math.sin(now / 800 + a.phase) * 0.8);
         ctx.globalAlpha = 0.7;
-        ctx.fillStyle = a.kind === 'petal' ? '#f3b8cb' : '#9cbf8e';
+        ctx.fillStyle = a.color || (a.kind === 'petal' ? '#f3b8cb' : '#9cbf8e');
         ctx.beginPath();
         ctx.ellipse(0, 0, cell * 0.14, cell * 0.07, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
+      } else if (a.kind === 'dust') {
+        a.y += dt * cell * 0.0004;
+        const x = a.x + Math.sin(now / 1500 + a.phase) * cell * 0.3;
+        if (a.y > rows * cell + cell * 0.3) { ambient.splice(i, 1); continue; }
+        ctx.globalAlpha = 0.22;
+        ctx.fillStyle = '#6e6b66';
+        ctx.beginPath();
+        ctx.arc(x, a.y, cell * 0.04, 0, Math.PI * 2);
+        ctx.fill();
       } else if (a.kind === 'firefly') {
         if (now - a.born > 9000) { ambient.splice(i, 1); continue; }
         a.x += Math.cos(now / 800 + a.phase) * 0.25;
@@ -1341,7 +1622,7 @@
           const secs = Math.max(1, Math.ceil(f.ticksLeft * stepMs / 1000));
           drawTimedFruit(kind, f.x, f.y, now, f.ticksLeft / ttlTicks, secs, secs <= 1);
         } else {
-          drawApple(f.x, f.y, now);
+          drawApple(f.x, f.y, now, f.golden);
         }
       }
       if (player.bonus) {
@@ -1399,6 +1680,10 @@
   configureBoard();
   updateScoreUI();
   refreshWardrobe();
+  updateDailyBtn();
   drawGarden();
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
   requestAnimationFrame(frame);
 })();

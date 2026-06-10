@@ -8,14 +8,17 @@ A cozy little snake game, built for relaxing play and content creation.
 
 - **Smooth, Google-Snake-style movement** — the snake glides between cells at 60fps with a curved, tapered, gradient body, a soft shadow, directional blinking eyes, and the occasional tongue flick.
 - **Four moods** — *classic* (walls and self-collision), *zen* (wrap-around edges, nothing can hurt you), *rush* (every fruit is timed — points equal the seconds remaining), and *trial* (best score in 60 seconds).
-- **Timed bonus fruit, one per palette** — orange in meadow, dragon fruit in sakura, kiwi in classic, starfruit in midnight, blueberry in tide. Each counts down from 5 seconds; eat it with N seconds left and you score N points.
-- **Unlockables** — eat 20 of a palette's timed fruit to unlock its snake skin (sunset, dragon, retro, galaxy, deepsea). Earn hats through achievements: outrun your ghost, catch timed fruit at full value, clutch-catch with 1 second left, and lifetime fruit milestones.
+- **Daily challenge** — everyone in the world gets the same board each day, with streak tracking. No account needed.
+- **Timed bonus fruit, one per palette** — orange in meadow, dragon fruit in sakura, kiwi in classic, starfruit in midnight, blueberry in tide, persimmon in autumn, plum in mono. Each counts down from 5 seconds; eat it with N seconds left and you score N points.
+- **Golden apples** — a rare spawn worth 3 points, with a sparkle.
+- **Unlockables** — eat 20 of a palette's timed fruit to unlock its snake skin (sunset, dragon, retro, galaxy, deepsea, ember, ink — plus honey for finding 10 golden apples). Earn hats through achievements: outrun your ghost, catch timed fruit at full value, clutch-catch with 1 second left, keep a daily streak, and lifetime fruit milestones. The stats tab shows progress toward everything.
 - **A persistent garden** — every 10 fruit you've ever eaten plants a flower under the board. It never resets.
 - **Ghost racing** — every run is recorded. Replay the same seed and a translucent ghost of your best run slithers alongside you.
-- **Challenge links** — share a URL after a run; anyone who opens it gets the same fruit layout and a "beat your score" goal.
-- **5 palettes** with ambient life — drifting leaves in meadow, petals in sakura, fireflies in midnight, bubbles in tide.
+- **Challenge links & result cards** — share a URL after a run (same fruit layout, "beat your score" goal), copy a text result summary, or save a pastel score-card image.
+- **7 palettes** with ambient life — drifting leaves in meadow, petals in sakura, fireflies in midnight, bubbles in tide, maple leaves in autumn, paper dust in mono.
 - **Wide & tall layouts** — tall is sized for 9:16 vertical recording (Shorts/TikTok/Reels). Press `h` for cinema mode (hides all UI).
-- **A generative lofi soundtrack with a mood per palette** — warm maj7 pads in meadow, slow minor pads with heavy vinyl crackle in midnight, koto-ish plucks in sakura, marimba blips in classic, and an ocean swell in tide — plus an independent rain layer. All synthesized live in WebAudio (no audio files), with separate music/SFX volume controls.
+- **A generative lofi soundtrack with a mood per palette** — warm maj7 pads in meadow, slow minor pads with heavy vinyl crackle in midnight, koto-ish plucks in sakura, marimba blips in classic, an ocean swell in tide, low autumn pads, and sparse mono piano — plus an independent rain layer. All synthesized live in WebAudio (no audio files), with separate music/SFX volume controls.
+- **Installable** — add it to your phone's home screen and it plays offline (PWA).
 
 ## Controls
 

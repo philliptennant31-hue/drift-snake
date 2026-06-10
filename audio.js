@@ -38,6 +38,16 @@ const Sound = (() => {
       chords: [[60, 62, 64, 67, 69, 72], [57, 60, 62, 64, 67, 69]],
       drone: [48, 55], bass: [36, 33], pluckType: 'sine',
     },
+    autumn: {                                   // warm low pads, like late light
+      style: 'pad', lp: 680, crackle: 0.13, wave: 0, gap: 7.5, dur: 8.4,
+      chords: [[51, 55, 58, 62], [48, 51, 55, 58], [44, 48, 51, 55], [46, 50, 53, 57]],
+      bass: [39, 36, 32, 34],
+    },
+    mono: {                                     // sparse piano-like notes, lots of air
+      style: 'pluck', lp: 1000, crackle: 0.12, wave: 0, gap: 7, dur: 7.4,
+      chords: [[57, 60, 64, 67, 72], [55, 59, 62, 67, 71]],
+      drone: [45], bass: [33, 31], pluckType: 'sine',
+    },
   };
   const mood = () => MOODS[moodKey] || MOODS.meadow;
 

@@ -2,8 +2,19 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>drift — a cozy snake game</title>
+<meta name="description" content="A cozy little snake game. Zen mode, daily challenges, ghost racing, unlockable snakes, and a generative lofi soundtrack.">
+<meta name="theme-color" content="#f4efe7">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta property="og:title" content="drift — a cozy snake game">
+<meta property="og:description" content="Zen mode, daily challenges, ghost racing, unlockable snakes, and a generative lofi soundtrack.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://philliptennant31-hue.github.io/drift-snake/">
+<meta property="og:image" content="https://philliptennant31-hue.github.io/drift-snake/social-card.png">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
@@ -42,8 +53,17 @@
     <h1>drift</h1>
     <p>a cozy little snake game</p>
     <div class="note hidden" id="challengeNote"></div>
-    <div class="opts">
-      <div class="opt-row wide">
+
+    <div class="tabs">
+      <button class="tab active" data-tab="play">play</button>
+      <button class="tab" data-tab="setup">setup</button>
+      <button class="tab" data-tab="style">style</button>
+      <button class="tab" data-tab="sound">sound</button>
+      <button class="tab" data-tab="stats">stats</button>
+    </div>
+
+    <div class="tab-panel" id="tab-play">
+      <div class="opt-row">
         <div class="label">mood</div>
         <div class="pills" data-group="mode">
           <button class="pill" data-v="classic">classic</button>
@@ -52,36 +72,46 @@
           <button class="pill" data-v="trial">trial</button>
         </div>
       </div>
-      <div class="opt-row">
-        <div class="label">pace</div>
-        <div class="pills" data-group="pace">
-          <button class="pill" data-v="slow">drift</button>
-          <button class="pill" data-v="normal">stroll</button>
-          <button class="pill" data-v="fast">scurry</button>
+      <button class="play-btn" id="playBtn">play</button>
+      <button class="play-btn small daily" id="dailyBtn">daily</button>
+    </div>
+
+    <div class="tab-panel hidden" id="tab-setup">
+      <div class="opts">
+        <div class="opt-row">
+          <div class="label">pace</div>
+          <div class="pills" data-group="pace">
+            <button class="pill" data-v="slow">drift</button>
+            <button class="pill" data-v="normal">stroll</button>
+            <button class="pill" data-v="fast">scurry</button>
+          </div>
+        </div>
+        <div class="opt-row">
+          <div class="label">meadow</div>
+          <div class="pills" data-group="size">
+            <button class="pill" data-v="small">snug</button>
+            <button class="pill" data-v="normal">cozy</button>
+            <button class="pill" data-v="large">roomy</button>
+          </div>
+        </div>
+        <div class="opt-row">
+          <div class="label">fruit</div>
+          <div class="pills" data-group="fruits">
+            <button class="pill" data-v="single">single</button>
+            <button class="pill" data-v="plenty">plenty</button>
+          </div>
+        </div>
+        <div class="opt-row">
+          <div class="label">shape</div>
+          <div class="pills" data-group="layout">
+            <button class="pill" data-v="wide">wide</button>
+            <button class="pill" data-v="tall">tall</button>
+          </div>
         </div>
       </div>
-      <div class="opt-row">
-        <div class="label">meadow</div>
-        <div class="pills" data-group="size">
-          <button class="pill" data-v="small">snug</button>
-          <button class="pill" data-v="normal">cozy</button>
-          <button class="pill" data-v="large">roomy</button>
-        </div>
-      </div>
-      <div class="opt-row">
-        <div class="label">fruit</div>
-        <div class="pills" data-group="fruits">
-          <button class="pill" data-v="single">single</button>
-          <button class="pill" data-v="plenty">plenty</button>
-        </div>
-      </div>
-      <div class="opt-row">
-        <div class="label">shape</div>
-        <div class="pills" data-group="layout">
-          <button class="pill" data-v="wide">wide</button>
-          <button class="pill" data-v="tall">tall</button>
-        </div>
-      </div>
+    </div>
+
+    <div class="tab-panel hidden" id="tab-style">
       <div class="opt-row">
         <div class="label">palette</div>
         <div class="pills" data-group="theme">
@@ -90,6 +120,8 @@
           <button class="pill dot" data-v="classic" title="classic" style="background:#aad751"></button>
           <button class="pill dot" data-v="sakura" title="sakura" style="background:#e8aec4"></button>
           <button class="pill dot" data-v="tide" title="tide" style="background:#5fa8a0"></button>
+          <button class="pill dot" data-v="autumn" title="autumn" style="background:#c97b4a"></button>
+          <button class="pill dot" data-v="mono" title="mono" style="background:#8a8782"></button>
         </div>
       </div>
       <div class="opt-row">
@@ -101,9 +133,12 @@
           <button class="pill dot" data-skin="retro" style="background:linear-gradient(135deg,#58b368,#9ed36a)"></button>
           <button class="pill dot" data-skin="galaxy" style="background:linear-gradient(135deg,#5c6bc0,#9575cd)"></button>
           <button class="pill dot" data-skin="deepsea" style="background:linear-gradient(135deg,#26818e,#4ab3a8)"></button>
+          <button class="pill dot" data-skin="ember" style="background:linear-gradient(135deg,#d97742,#a8524a)"></button>
+          <button class="pill dot" data-skin="ink" style="background:linear-gradient(135deg,#3d3b38,#6e6b66)"></button>
+          <button class="pill dot" data-skin="honey" style="background:linear-gradient(135deg,#e2b13c,#f0d27a)"></button>
         </div>
       </div>
-      <div class="opt-row wide">
+      <div class="opt-row">
         <div class="label">hat</div>
         <div class="pills" id="hatPills">
           <button class="pill" data-hat="none">none</button>
@@ -111,6 +146,8 @@
           <button class="pill" data-hat="crown">crown</button>
           <button class="pill" data-hat="flower">flower</button>
           <button class="pill" data-hat="chef">chef</button>
+          <button class="pill" data-hat="bow">bow</button>
+          <button class="pill" data-hat="mushroom">mushroom</button>
           <button class="pill" data-hat="halo">halo</button>
         </div>
       </div>
@@ -121,6 +158,19 @@
           <button class="pill" data-v="off">off</button>
         </div>
       </div>
+    </div>
+
+    <div class="tab-panel hidden" id="tab-sound">
+      <div class="sliders">
+        <div class="slider-box">
+          <div class="label">music</div>
+          <input type="range" id="musicVol" min="0" max="100" value="50">
+        </div>
+        <div class="slider-box">
+          <div class="label">sfx</div>
+          <input type="range" id="sfxVol" min="0" max="100" value="80">
+        </div>
+      </div>
       <div class="opt-row">
         <div class="label">rain</div>
         <div class="pills" data-group="rain">
@@ -128,20 +178,9 @@
           <button class="pill" data-v="on">on</button>
         </div>
       </div>
-      <div class="opt-row wide">
-        <div class="sliders">
-          <div class="slider-box">
-            <div class="label">music</div>
-            <input type="range" id="musicVol" min="0" max="100" value="50">
-          </div>
-          <div class="slider-box">
-            <div class="label">sfx</div>
-            <input type="range" id="sfxVol" min="0" max="100" value="80">
-          </div>
-        </div>
-      </div>
     </div>
-    <button class="play-btn" id="playBtn">play</button>
+
+    <div class="tab-panel hidden" id="tab-stats"></div>
   </div>
 
   <div class="overlay" id="ready">
@@ -167,7 +206,8 @@
       <button class="play-btn small" id="raceBtn">race your ghost</button>
     </div>
     <div class="btn-row">
-      <button class="ghost-btn" id="shareBtn">share challenge</button>
+      <button class="ghost-btn" id="copyBtn">copy result</button>
+      <button class="ghost-btn" id="cardBtn">save card</button>
       <button class="ghost-btn" id="menuBtn">back to menu</button>
     </div>
   </div>
