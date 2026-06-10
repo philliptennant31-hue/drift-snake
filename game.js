@@ -742,6 +742,7 @@
         resetAmbient();   // no leftover fish in the autumn woods
         Sound.setRain(getRain(settings.theme) === 'on');
         syncRainPills();
+        artistWorldChanged();
       }
       if (g === 'musicMode') {
         if (settings.musicMode === 'artists' && !tracksAvailable()) {
@@ -763,11 +764,21 @@
   // ---------- artist music player ----------
   // real tracks with the artist credited on a now-playing card; the card
   // links to the artist, which is also the CC-BY attribution
-  let trackAudio = null, trackOrder = [], trackIdx = -1;
+  let trackAudio = null, trackIdx = -1;
   const tracksAvailable = () => typeof TRACKS !== 'undefined' && TRACKS.length > 0;
 
+  // each world gets its own playlist; tracks without a worlds list are the
+  // anywhere pool, used when a world has nothing of its own
+  function pickArtistTrack() {
+    const w = settings.theme;
+    let pool = TRACKS.map((t, i) => i).filter(i => TRACKS[i].worlds && TRACKS[i].worlds.includes(w));
+    if (!pool.length) pool = TRACKS.map((t, i) => i).filter(i => !TRACKS[i].worlds);
+    if (!pool.length) pool = TRACKS.map((t, i) => i);
+    if (pool.length > 1) pool = pool.filter(i => i !== trackIdx);
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
   function loadTrack(autoplay) {
-    const t = TRACKS[trackOrder[trackIdx]];
+    const t = TRACKS[trackIdx];
     trackAudio.src = t.src;
     $('npText').textContent = `${t.title} — ${t.artist}`;
     $('nowPlaying').href = t.link;
@@ -779,17 +790,12 @@
     if (!trackAudio) {
       trackAudio = new Audio();
       trackAudio.addEventListener('ended', () => {
-        trackIdx = (trackIdx + 1) % trackOrder.length;
+        trackIdx = pickArtistTrack();
         loadTrack(true);
       });
     }
     if (trackIdx < 0) {
-      trackOrder = TRACKS.map((_, i) => i);
-      for (let i = trackOrder.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [trackOrder[i], trackOrder[j]] = [trackOrder[j], trackOrder[i]];
-      }
-      trackIdx = 0;
+      trackIdx = pickArtistTrack();
       loadTrack(false);
     }
     trackAudio.volume = Math.min(1, settings.musicVol);
@@ -802,6 +808,17 @@
   function stopArtistMusic() {
     if (trackAudio) trackAudio.pause();
     $('nowPlaying').classList.add('hidden');
+  }
+  function artistWorldChanged() {
+    if (settings.musicMode !== 'artists' || !trackAudio || trackIdx < 0) return;
+    const t = TRACKS[trackIdx];
+    const w = settings.theme;
+    const hasOwn = TRACKS.some(x => x.worlds && x.worlds.includes(w));
+    const suits = t.worlds ? t.worlds.includes(w) : !hasOwn;
+    if (!suits) {
+      trackIdx = pickArtistTrack();
+      loadTrack(!trackAudio.paused);
+    }
   }
   function ensureMusic() {
     if (settings.musicMode === 'artists' && startArtistMusic()) return;
@@ -2321,21 +2338,21 @@
     Sound.ui();
   }
 
-  function drawSleepingSnake(now, cx, cy) {
+  function drawSleepingSnake(now, cx, cy, inkColor) {
     const skin = SKINS[prog.skin] || SKINS.drift;
-    const breathe = 1 + Math.sin(now / 1900) * 0.02;
-    const U = cell * 0.9;
-    const BW = U * 0.62;
+    const breathe = 1 + Math.sin(now / 1900) * 0.035;
+    const U = cell * 1.35;
+    const BW = U * 0.55;
     const pts = [];
-    for (let t = 0; t <= 4.6; t += 0.18) {
+    for (let t = 0; t <= 4.6; t += 0.15) {
       const r = U * (0.25 + t * 0.21) * breathe;
       pts.push({ x: cx + Math.cos(t + 2.4) * r, y: cy + Math.sin(t + 2.4) * r * 0.62 });
     }
-    ctx.fillStyle = 'rgba(0,0,0,.08)';
+    ctx.fillStyle = 'rgba(0,0,0,.10)';
     ctx.beginPath();
-    ctx.ellipse(cx, cy + U * 0.8, U * 1.6, U * 0.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(cx, cy + U * 0.85, U * 1.7, U * 0.55, 0, 0, Math.PI * 2);
     ctx.fill();
-    const grad = ctx.createLinearGradient(cx - U, cy, cx + U * 1.5, cy);
+    const grad = ctx.createLinearGradient(cx - U * 1.4, cy, cx + U * 1.6, cy);
     grad.addColorStop(0, skin.b);
     grad.addColorStop(1, skin.a);
     ctx.strokeStyle = grad;
@@ -2348,43 +2365,114 @@
       ctx.lineTo(pts[i + 1].x, pts[i + 1].y);
       ctx.stroke();
     }
+    // head rises and falls gently with the breath
     const hp = pts[pts.length - 1];
+    const hy = hp.y + Math.sin(now / 1900) * cell * 0.06;
     ctx.fillStyle = skin.head;
     ctx.beginPath();
-    ctx.arc(hp.x, hp.y, BW * 0.62, 0, Math.PI * 2);
+    ctx.arc(hp.x, hy, BW * 0.6, 0, Math.PI * 2);
     ctx.fill();
-    drawFace(ctx, hp.x, hp.y, 1, 0, BW * 1.5, false, true);
-    if (prog.hat !== 'none') drawHat(ctx, prog.hat, hp.x, hp.y, BW * 1.5);
+    const fs = BW * 1.45;
+    ctx.fillStyle = 'rgba(240,130,130,.30)';
+    for (const side of [-1, 1]) {
+      ctx.beginPath();
+      ctx.arc(hp.x - fs * 0.06, hy + fs * 0.27 * side, fs * 0.075, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // peacefully closed eyes: soft downward arcs
+    ctx.strokeStyle = '#4d4a63';
+    ctx.lineWidth = Math.max(1.6, fs * 0.045);
+    ctx.lineCap = 'round';
+    for (const side of [-1, 1]) {
+      const ex = hp.x + fs * 0.10;
+      const ey = hy + fs * 0.165 * side;
+      ctx.beginPath();
+      ctx.arc(ex, ey - fs * 0.05, fs * 0.11, Math.PI * 0.15, Math.PI * 0.85);
+      ctx.stroke();
+    }
+    if (prog.hat !== 'none') drawHat(ctx, prog.hat, hp.x, hy, fs);
     ctx.textAlign = 'center';
     for (let k = 0; k < 3; k++) {
       const ph = ((now / 1400) + k * 0.33) % 1;
-      ctx.globalAlpha = Math.max(0, (1 - ph) * 0.65);
-      ctx.fillStyle = '#6f665b';
-      ctx.font = `700 ${Math.round(cell * (0.2 + k * 0.05 + ph * 0.12))}px Quicksand, sans-serif`;
-      ctx.fillText('z', hp.x + cell * (0.55 + ph * 0.5 + k * 0.2), hp.y - cell * (0.45 + ph * 0.7 + k * 0.25));
+      ctx.globalAlpha = Math.max(0, (1 - ph) * 0.75);
+      ctx.fillStyle = inkColor;
+      ctx.font = `700 ${Math.round(cell * (0.26 + k * 0.07 + ph * 0.14))}px Quicksand, sans-serif`;
+      ctx.fillText('z', hp.x + cell * (0.7 + ph * 0.6 + k * 0.25), hy - cell * (0.55 + ph * 0.9 + k * 0.3));
     }
     ctx.globalAlpha = 1;
+  }
+
+  // the garden takes after whichever world you have grown the most flowers in
+  const GARDEN_LOOKS = {
+    m: { skyA: '#cfe3f2', skyB: '#f4ecd8', groundA: '#cde4bd', groundB: '#b7d6a6',
+         canopy: ['#88b884', '#7da379', '#94bd8b'], grass: 'rgba(110,150,100,.4)',
+         ink: '#6f665b', soft: '#a99e8f', critters: 'meadow', precip: null, night: false },
+    s: { skyA: '#f3d4e2', skyB: '#fdf0e4', groundA: '#d8e6c0', groundB: '#c3d9ab',
+         canopy: ['#f0b6cc', '#e8a4bf', '#f5c7d8'], grass: 'rgba(110,150,100,.4)',
+         ink: '#7a5f68', soft: '#b393a0', critters: 'meadow', precip: 'petal', night: false },
+    n: { skyA: '#22203a', skyB: '#3c3858', groundA: '#41504a', groundB: '#313e38',
+         canopy: ['#4a6455', '#3e5949', '#54705f'], grass: 'rgba(180,205,190,.25)',
+         ink: '#e6e1d4', soft: '#a9a2b8', critters: 'firefly', precip: null, night: true },
+    c: { skyA: '#d9f0fb', skyB: '#eef8e8', groundA: '#aad751', groundB: '#a2d149',
+         canopy: ['#3faa49', '#5cb860', '#7cc97e'], grass: 'rgba(80,130,60,.4)',
+         ink: '#3c4043', soft: '#7d8288', critters: 'pixelfly', precip: null, night: false },
+    t: { skyA: '#bfe0ec', skyB: '#e6f3ec', groundA: '#e8dcb6', groundB: '#dccc9d',
+         canopy: ['#5fa8a0', '#76b5a6', '#8ec3b0'], grass: 'rgba(140,160,120,.4)',
+         ink: '#4f6868', soft: '#8aa6a3', critters: 'meadow', precip: null, night: false },
+    a: { skyA: '#f2d9b8', skyB: '#f9ecd2', groundA: '#ddc99b', groundB: '#ccb480',
+         canopy: ['#d98a4a', '#c2632f', '#e0a45e'], grass: 'rgba(150,120,70,.4)',
+         ink: '#6b5a48', soft: '#a8927a', critters: 'meadow', precip: 'maple', night: false },
+    o: { skyA: '#d9d9d5', skyB: '#edebe5', groundA: '#e9e8e2', groundB: '#dbd9d1',
+         canopy: ['#9aa89a', '#8a9a8c', '#a8b5a8'], grass: 'rgba(130,130,125,.35)',
+         ink: '#4a4845', soft: '#94918a', critters: null, precip: 'snow', night: false },
+  };
+  function gardenWorld() {
+    const counts = {};
+    for (const ch of (prog.bloomLog || '')) counts[ch] = (counts[ch] || 0) + 1;
+    let best = 'm', n = 0;
+    for (const ch in counts) if (counts[ch] > n) { n = counts[ch]; best = ch; }
+    return best;
   }
 
   function drawGardenScene(now) {
     const W = cols * cell, H = rows * cell;
     const horizon = H * 0.34;
+    const look = GARDEN_LOOKS[gardenWorld()] || GARDEN_LOOKS.m;
     let g = ctx.createLinearGradient(0, 0, 0, horizon);
-    g.addColorStop(0, '#cfe3f2');
-    g.addColorStop(1, '#f4ecd8');
+    g.addColorStop(0, look.skyA);
+    g.addColorStop(1, look.skyB);
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, W, horizon + 1);
-    ctx.fillStyle = 'rgba(247,227,176,.35)';
-    ctx.beginPath();
-    ctx.arc(W * 0.82, horizon * 0.45, cell * 0.85, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = 'rgba(247,227,176,.95)';
-    ctx.beginPath();
-    ctx.arc(W * 0.82, horizon * 0.45, cell * 0.5, 0, Math.PI * 2);
-    ctx.fill();
+    if (look.night) {
+      const sr = mulberry32(404);
+      ctx.fillStyle = '#e8e9f5';
+      for (let i = 0; i < 40; i++) {
+        const x = sr() * W, y = sr() * horizon * 0.9;
+        ctx.globalAlpha = 0.3 + 0.5 * Math.sin(now / (500 + sr() * 600) + i);
+        ctx.fillRect(x, y, 2, 2);
+      }
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = '#f1ecd7';
+      ctx.beginPath();
+      ctx.arc(W * 0.82, horizon * 0.42, cell * 0.45, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = look.skyA;
+      ctx.beginPath();
+      ctx.arc(W * 0.82 + cell * 0.2, horizon * 0.42 - cell * 0.12, cell * 0.38, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      ctx.fillStyle = 'rgba(247,227,176,.35)';
+      ctx.beginPath();
+      ctx.arc(W * 0.82, horizon * 0.45, cell * 0.85, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(247,227,176,.95)';
+      ctx.beginPath();
+      ctx.arc(W * 0.82, horizon * 0.45, cell * 0.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
     g = ctx.createLinearGradient(0, horizon, 0, H);
-    g.addColorStop(0, '#cde4bd');
-    g.addColorStop(1, '#b7d6a6');
+    g.addColorStop(0, look.groundA);
+    g.addColorStop(1, look.groundB);
     ctx.fillStyle = g;
     ctx.fillRect(0, horizon, W, H - horizon);
 
@@ -2398,7 +2486,7 @@
       const th = cell * (1.2 + r() * 0.5);
       ctx.fillStyle = '#9a7350';
       ctx.fillRect(tx - cell * 0.06, horizon - th * 0.5, cell * 0.12, th * 0.55);
-      ctx.fillStyle = ['#88b884', '#7da379', '#94bd8b'][ti % 3];
+      ctx.fillStyle = look.canopy[ti % 3];
       for (const [ox, oy, rr] of [[0, 0.78, 0.45], [-0.32, 0.6, 0.32], [0.32, 0.62, 0.34]]) {
         ctx.beginPath();
         ctx.arc(tx + ox * th, horizon - th * oy, th * rr, 0, Math.PI * 2);
@@ -2407,7 +2495,7 @@
     }
 
     const gr = mulberry32(909);
-    ctx.strokeStyle = 'rgba(110,150,100,.4)';
+    ctx.strokeStyle = look.grass;
     ctx.lineWidth = Math.max(1, cell * 0.03);
     ctx.lineCap = 'round';
     for (let i = 0; i < W / 12; i++) {
@@ -2458,50 +2546,116 @@
       ctx.fill();
     }
 
-    drawSleepingSnake(now, W * 0.5, H * 0.66);
+    drawSleepingSnake(now, W * 0.5, H * 0.66, look.ink);
 
-    // a couple of butterflies and a bee keep the snake company
-    for (let k = 0; k < 3; k++) {
-      const bx = W * (0.5 + 0.36 * Math.sin(now / (3600 + k * 700) + k * 2.1));
-      const by = horizon * 0.6 + (H * 0.7 - horizon * 0.6) * (0.5 + 0.42 * Math.sin(now / (2900 + k * 500) + k * 1.3));
-      const flap = Math.abs(Math.sin(now / 130 + k * 2));
-      if (k === 2) {
-        const s = cell * 0.08;
-        ctx.fillStyle = 'rgba(255,255,255,.75)';
-        ctx.beginPath();
-        ctx.ellipse(bx - s * 0.2, by - s * (0.9 + flap * 0.5), s * 0.7, s * 0.45, -0.5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#f2c84b';
-        ctx.beginPath();
-        ctx.ellipse(bx, by, s * 1.15, s * 0.8, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#6b4f2e';
-        ctx.lineWidth = Math.max(1.2, s * 0.32);
-        ctx.beginPath();
-        ctx.moveTo(bx - s * 0.3, by - s * 0.7);
-        ctx.lineTo(bx - s * 0.3, by + s * 0.7);
-        ctx.stroke();
-      } else {
-        ctx.fillStyle = ['#ffffff', '#ffb3c0'][k];
-        for (const s of [-1, 1]) {
+    // company, depending on what kind of garden this has become
+    if (look.critters === 'meadow') {
+      for (let k = 0; k < 3; k++) {
+        const bx = W * (0.5 + 0.36 * Math.sin(now / (3600 + k * 700) + k * 2.1));
+        const by = horizon * 0.6 + (H * 0.7 - horizon * 0.6) * (0.5 + 0.42 * Math.sin(now / (2900 + k * 500) + k * 1.3));
+        const flap = Math.abs(Math.sin(now / 130 + k * 2));
+        if (k === 2) {
+          const s = cell * 0.08;
+          ctx.fillStyle = 'rgba(255,255,255,.75)';
           ctx.beginPath();
-          ctx.ellipse(bx + s * cell * 0.08 * (0.3 + flap * 0.7), by,
-            cell * 0.10 * (0.3 + flap * 0.7), cell * 0.12, s * 0.5, 0, Math.PI * 2);
+          ctx.ellipse(bx - s * 0.2, by - s * (0.9 + flap * 0.5), s * 0.7, s * 0.45, -0.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#f2c84b';
+          ctx.beginPath();
+          ctx.ellipse(bx, by, s * 1.15, s * 0.8, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = '#6b4f2e';
+          ctx.lineWidth = Math.max(1.2, s * 0.32);
+          ctx.beginPath();
+          ctx.moveTo(bx - s * 0.3, by - s * 0.7);
+          ctx.lineTo(bx - s * 0.3, by + s * 0.7);
+          ctx.stroke();
+        } else {
+          ctx.fillStyle = ['#ffffff', '#ffb3c0'][k];
+          for (const s of [-1, 1]) {
+            ctx.beginPath();
+            ctx.ellipse(bx + s * cell * 0.08 * (0.3 + flap * 0.7), by,
+              cell * 0.10 * (0.3 + flap * 0.7), cell * 0.12, s * 0.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.fillStyle = 'rgba(90,80,70,.8)';
+          ctx.beginPath();
+          ctx.ellipse(bx, by, cell * 0.02, cell * 0.08, 0, 0, Math.PI * 2);
           ctx.fill();
         }
-        ctx.fillStyle = 'rgba(90,80,70,.8)';
-        ctx.beginPath();
-        ctx.ellipse(bx, by, cell * 0.02, cell * 0.08, 0, 0, Math.PI * 2);
-        ctx.fill();
+      }
+    } else if (look.critters === 'firefly') {
+      for (let k = 0; k < 5; k++) {
+        const bx = W * (0.5 + 0.4 * Math.sin(now / (4200 + k * 600) + k * 2.3));
+        const by = horizon * 0.5 + (H * 0.8 - horizon * 0.5) * (0.5 + 0.4 * Math.sin(now / (3300 + k * 450) + k * 1.7));
+        const glow = 0.4 + 0.3 * Math.sin(now / (800 + k * 150) + k);
+        ctx.globalAlpha = glow;
+        ctx.fillStyle = '#f4d35e';
+        ctx.beginPath(); ctx.arc(bx, by, cell * 0.09, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = Math.min(1, glow * 2);
+        ctx.fillStyle = '#fdf3c0';
+        ctx.beginPath(); ctx.arc(bx, by, cell * 0.04, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+    } else if (look.critters === 'pixelfly') {
+      for (let k = 0; k < 2; k++) {
+        const bx = Math.round((W * (0.5 + 0.38 * Math.sin(now / (3500 + k * 800) + k * 2))) / 3) * 3;
+        const by = Math.round((horizon * 0.6 + (H * 0.7 - horizon * 0.6) * (0.5 + 0.4 * Math.sin(now / 2800 + k * 1.4))) / 3) * 3;
+        const u = Math.max(2, Math.round(cell * 0.07));
+        const open = Math.floor(now / 160 + k) % 2 === 0;
+        ctx.fillStyle = ['#4775ea', '#ffd23f'][k];
+        if (open) {
+          ctx.fillRect(bx - u * 2, by - u, u, u * 2);
+          ctx.fillRect(bx + u, by - u, u, u * 2);
+        } else {
+          ctx.fillRect(bx - u * 1.4, by - u * 1.6, u, u * 1.4);
+          ctx.fillRect(bx + u * 0.4, by - u * 1.6, u, u * 1.4);
+        }
+        ctx.fillStyle = '#3c4043';
+        ctx.fillRect(bx - u / 2, by - u * 1.2, u, u * 2.4);
+      }
+    }
+
+    // weather drifting through, when the garden's world calls for it
+    if (look.precip) {
+      for (let k = 0; k < 10; k++) {
+        const fall = ((now * (0.018 + (k % 4) * 0.004) + k * 977) % (H + cell)) - cell * 0.5;
+        const px = ((k * 197) % 100) / 100 * W + Math.sin(now / 1200 + k) * cell * 0.4;
+        ctx.save();
+        ctx.translate(px, fall);
+        if (look.precip === 'petal') {
+          ctx.rotate(Math.sin(now / 800 + k) + k);
+          ctx.globalAlpha = 0.85;
+          ctx.fillStyle = '#f293b9';
+          const s = cell * 0.11;
+          ctx.beginPath();
+          ctx.moveTo(0, -s * 1.35);
+          ctx.quadraticCurveTo(s, -s * 0.35, 0, s);
+          ctx.quadraticCurveTo(-s, -s * 0.35, 0, -s * 1.35);
+          ctx.fill();
+        } else if (look.precip === 'maple') {
+          ctx.rotate(Math.sin(now / 1500 + k) + k);
+          ctx.globalAlpha = 0.8;
+          ctx.fillStyle = ['#d98a4a', '#c2632f', '#b8923f'][k % 3];
+          drawMapleLeaf(ctx, cell * 0.14);
+        } else if (look.precip === 'snow') {
+          ctx.globalAlpha = 0.85;
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(0, 0, cell * (0.035 + (k % 3) * 0.015), 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+        ctx.globalAlpha = 1;
       }
     }
 
     ctx.textAlign = 'center';
     ctx.textBaseline = 'alphabetic';
-    ctx.fillStyle = '#6f665b';
+    ctx.fillStyle = look.ink;
     ctx.font = `700 ${Math.round(cell * 0.55)}px Quicksand, sans-serif`;
     ctx.fillText('your garden', W / 2, cell * 0.95);
-    ctx.fillStyle = '#a99e8f';
+    ctx.fillStyle = look.soft;
     ctx.font = `700 ${Math.round(cell * 0.3)}px Quicksand, sans-serif`;
     ctx.fillText(
       blooms === 0
