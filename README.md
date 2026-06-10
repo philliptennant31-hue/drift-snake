@@ -2,7 +2,7 @@
 
 A cozy little snake game, built for relaxing play and content creation.
 
-**Play it:** open `index.html`, or visit the hosted version (link coming once published).
+**Play it: [philliptennant31-hue.github.io/drift-snake](https://philliptennant31-hue.github.io/drift-snake/)** — or just open `index.html` locally.
 
 ## Features
 
