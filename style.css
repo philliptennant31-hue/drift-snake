@@ -94,13 +94,19 @@ canvas {
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
-  transition: opacity .35s ease;
+  transition: opacity .35s ease, visibility 0s linear .35s;
   text-align: center;
   padding: 18px;
   overflow-y: auto;
 }
-.overlay.show { opacity: 1; pointer-events: auto; }
+.overlay.show {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity .35s ease;
+}
 .overlay h1 {
   font-size: 30px;
   font-weight: 700;

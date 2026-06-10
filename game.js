@@ -372,7 +372,18 @@
     const last = dirQueue.length ? dirQueue[dirQueue.length - 1] : player.dir;
     if (d.x === last.x && d.y === last.y) return;
     if (d.x === -last.x && d.y === -last.y) return;
-    if (dirQueue.length < 3) { dirQueue.push(d); Sound.turn(); }
+    if (dirQueue.length < 2) {
+      dirQueue.push(d);
+      Sound.turn();
+    } else {
+      // buffer is full: the newest press replaces the waiting one, so the
+      // player's latest intent never sits behind stale input
+      const prev = dirQueue[0];
+      if (!(d.x === prev.x && d.y === prev.y) && !(d.x === -prev.x && d.y === -prev.y)) {
+        dirQueue[1] = d;
+        Sound.turn();
+      }
+    }
   }
 
   function tryStart(d) {
