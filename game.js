@@ -1021,6 +1021,40 @@
       }
   }
 
+  // static scene dressing per palette: stars after dark, seaweed on the seabed
+  function drawScene(now) {
+    if (settings.ambience !== 'on') return;
+    if (settings.theme === 'midnight') {
+      const rng = mulberry32(99);
+      const n = Math.floor(cols * rows / 7);
+      ctx.fillStyle = '#cdd3ec';
+      for (let i = 0; i < n; i++) {
+        const x = rng() * cols * cell, y = rng() * rows * cell;
+        const r = cell * (0.025 + rng() * 0.022);
+        const tw = 0.22 + 0.4 * Math.sin(now / (500 + rng() * 600) + i * 1.7);
+        ctx.globalAlpha = Math.max(0.04, tw);
+        ctx.fillRect(x, y, r * 2, r * 2);
+      }
+      ctx.globalAlpha = 1;
+    } else if (settings.theme === 'tide') {
+      const rng = mulberry32(77);
+      const n = Math.max(4, Math.floor(cols / 2.5));
+      ctx.strokeStyle = 'rgba(58,110,98,.35)';
+      ctx.lineWidth = Math.max(2, cell * 0.08);
+      ctx.lineCap = 'round';
+      const H = rows * cell;
+      for (let i = 0; i < n; i++) {
+        const x = rng() * cols * cell;
+        const h = cell * (0.8 + rng() * 1.2);
+        const sway = Math.sin(now / (1100 + rng() * 500) + i * 2.1) * cell * 0.18;
+        ctx.beginPath();
+        ctx.moveTo(x, H);
+        ctx.quadraticCurveTo(x + sway * 0.4, H - h * 0.6, x + sway, H - h);
+        ctx.stroke();
+      }
+    }
+  }
+
   // ---------- fruit drawing ----------
   function fruitShadow(cx, cy, r) {
     ctx.fillStyle = 'rgba(0,0,0,.10)';
@@ -1530,23 +1564,60 @@
   }
 
   // ---------- ambient particles ----------
-  const AMB_RATE = { meadow: 1600, sakura: 950, midnight: 1700, tide: 1100, autumn: 1200, mono: 2200 };
+  const AMB_RATE = { meadow: 1400, sakura: 950, midnight: 1500, tide: 1000, autumn: 1200, mono: 2200 };
   function spawnAmbient(now) {
     const W = cols * cell, H = rows * cell;
     const theme = settings.theme;
-    if (theme === 'meadow' || theme === 'sakura' || theme === 'autumn') {
+    if (theme === 'meadow') {
+      const flies = ambient.filter(a => a.kind === 'butterfly').length;
+      if (flies < 3 && Math.random() < 0.35) {
+        ambient.push({
+          kind: 'butterfly', x: Math.random() < 0.5 ? -cell * 0.4 : W + cell * 0.4,
+          y: H * (0.15 + Math.random() * 0.7), phase: Math.random() * 6.28, born: now,
+          color: ['#f7f3e8', '#f2d8a0', '#cfc3ee'][Math.floor(Math.random() * 3)],
+        });
+        return;
+      }
       if (ambient.length >= 12) return;
-      const kind = theme === 'sakura' ? 'petal' : 'leaf';
-      const color = theme === 'autumn' ? ['#d98a4a', '#c2632f', '#b8923f'][Math.floor(Math.random() * 3)] : null;
-      ambient.push({ kind, color, x: Math.random() * W, y: -cell * 0.4, phase: Math.random() * 6.28 });
+      ambient.push({ kind: 'leaf', x: Math.random() * W, y: -cell * 0.4, phase: Math.random() * 6.28 });
+    } else if (theme === 'sakura') {
+      if (ambient.length >= 16) return;
+      const flurry = Math.random() < 0.18 ? 5 + Math.floor(Math.random() * 4) : 1;
+      for (let i = 0; i < flurry; i++) {
+        ambient.push({
+          kind: 'petal', x: Math.random() * W,
+          y: -cell * (0.4 + Math.random() * 2.5), phase: Math.random() * 6.28,
+        });
+      }
+    } else if (theme === 'autumn') {
+      if (ambient.length >= 12) return;
+      const color = ['#d98a4a', '#c2632f', '#b8923f'][Math.floor(Math.random() * 3)];
+      ambient.push({ kind: 'leaf', color, x: Math.random() * W, y: -cell * 0.4, phase: Math.random() * 6.28 });
     } else if (theme === 'mono') {
       if (ambient.length >= 14) return;
       ambient.push({ kind: 'dust', x: Math.random() * W, y: -cell * 0.2, phase: Math.random() * 6.28 });
     } else if (theme === 'midnight') {
-      if (ambient.filter(a => a.kind === 'firefly').length >= 6) return;
-      ambient.push({ kind: 'firefly', x: Math.random() * W, y: Math.random() * H, phase: Math.random() * 6.28, born: now });
+      if (ambient.filter(a => a.kind === 'firefly').length >= 7) return;
+      ambient.push({
+        kind: 'firefly', x: Math.random() * W, y: Math.random() * H,
+        phase: Math.random() * 6.28, born: now,
+        size: 0.7 + Math.random() * 0.7, sp: 0.6 + Math.random() * 0.9,
+      });
     } else if (theme === 'tide') {
-      if (ambient.length >= 10) return;
+      const fish = ambient.filter(a => a.kind === 'fish').length;
+      if (fish < 4 && Math.random() < 0.3) {
+        const dir = Math.random() < 0.5 ? 1 : -1;
+        ambient.push({
+          kind: 'fish', dir,
+          x: dir > 0 ? -cell : W + cell,
+          y: H * (0.1 + Math.random() * 0.75),
+          phase: Math.random() * 6.28,
+          size: 0.6 + Math.random() * 0.6,
+          sp: 0.25 + Math.random() * 0.3,
+        });
+        return;
+      }
+      if (ambient.length >= 12) return;
       ambient.push({ kind: 'bubble', x: Math.random() * W, y: H + cell * 0.3, phase: Math.random() * 6.28, r: cell * (0.05 + Math.random() * 0.08) });
     }
   }
@@ -1584,17 +1655,53 @@
         ctx.arc(x, a.y, cell * 0.04, 0, Math.PI * 2);
         ctx.fill();
       } else if (a.kind === 'firefly') {
-        if (now - a.born > 9000) { ambient.splice(i, 1); continue; }
-        a.x += Math.cos(now / 800 + a.phase) * 0.25;
-        a.y += Math.sin(now / 700 + a.phase * 1.7) * 0.25;
-        const glow = 0.35 + 0.35 * Math.sin(now / 300 + a.phase);
-        const fade = Math.min(1, (now - a.born) / 1000, (9000 - (now - a.born)) / 1000);
-        ctx.globalAlpha = glow * fade;
+        if (now - a.born > 11000) { ambient.splice(i, 1); continue; }
+        const sz = a.size || 1, sp = a.sp || 1;
+        // two slow drift frequencies layered for an organic wander
+        a.x += (Math.cos(now / 1500 * sp + a.phase) * 0.3 + Math.cos(now / 480 + a.phase * 3) * 0.12) * sp;
+        a.y += (Math.sin(now / 1250 * sp + a.phase * 1.7) * 0.3 + Math.sin(now / 410 + a.phase * 2.2) * 0.1) * sp;
+        const glow = 0.30 + 0.40 * Math.sin(now / (260 + sz * 90) + a.phase);
+        const fade = Math.min(1, (now - a.born) / 1200, (11000 - (now - a.born)) / 1200);
+        ctx.globalAlpha = Math.max(0, glow * fade);
         ctx.fillStyle = '#f4d35e';
-        ctx.beginPath(); ctx.arc(a.x, a.y, cell * 0.10, 0, Math.PI * 2); ctx.fill();
-        ctx.globalAlpha = Math.min(1, glow * fade * 2);
-        ctx.fillStyle = '#f8e9a1';
-        ctx.beginPath(); ctx.arc(a.x, a.y, cell * 0.045, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(a.x, a.y, cell * 0.11 * sz, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = Math.min(1, Math.max(0, glow * fade * 2.2));
+        ctx.fillStyle = '#fdf3c0';
+        ctx.beginPath(); ctx.arc(a.x, a.y, cell * 0.05 * sz, 0, Math.PI * 2); ctx.fill();
+      } else if (a.kind === 'butterfly') {
+        if (now - a.born > 14000) { ambient.splice(i, 1); continue; }
+        a.x += Math.cos(now / 1300 + a.phase) * 0.5 + (a.phase % 2 < 1 ? 0.22 : -0.22);
+        a.y += Math.sin(now / 600 + a.phase * 2) * 0.45;
+        const fade = Math.min(1, (now - a.born) / 800, (14000 - (now - a.born)) / 800);
+        const flap = Math.abs(Math.sin(now / 110 + a.phase));
+        ctx.globalAlpha = 0.85 * fade;
+        ctx.fillStyle = a.color;
+        for (const s of [-1, 1]) {
+          ctx.beginPath();
+          ctx.ellipse(a.x + s * cell * 0.07 * (0.3 + flap * 0.7), a.y,
+            cell * 0.085 * (0.3 + flap * 0.7), cell * 0.11, s * 0.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = 'rgba(90,80,70,.7)';
+        ctx.beginPath();
+        ctx.ellipse(a.x, a.y, cell * 0.018, cell * 0.07, 0, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (a.kind === 'fish') {
+        const sz = a.size, W2 = cols * cell;
+        a.x += a.dir * a.sp * dt * cell * 0.0011;
+        const y = a.y + Math.sin(now / 900 + a.phase) * cell * 0.3;
+        if ((a.dir > 0 && a.x > W2 + cell) || (a.dir < 0 && a.x < -cell)) { ambient.splice(i, 1); continue; }
+        ctx.globalAlpha = 0.22;
+        ctx.fillStyle = '#3a6470';
+        ctx.beginPath();
+        ctx.ellipse(a.x, y, cell * 0.30 * sz, cell * 0.13 * sz, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(a.x - a.dir * cell * 0.26 * sz, y);
+        ctx.lineTo(a.x - a.dir * cell * 0.48 * sz, y - cell * 0.14 * sz);
+        ctx.lineTo(a.x - a.dir * cell * 0.48 * sz, y + cell * 0.14 * sz);
+        ctx.closePath();
+        ctx.fill();
       } else if (a.kind === 'bubble') {
         a.y -= dt * cell * 0.0007;
         const x = a.x + Math.sin(now / 600 + a.phase) * cell * 0.15;
@@ -1731,6 +1838,7 @@
     const t = state === 'playing' ? Math.min(acc / stepMs, 1) : 1;
     ctx.clearRect(0, 0, cols * cell, rows * cell);
     drawBoard();
+    drawScene(now);
     drawAmbient(now, dt);
 
     if (player) {

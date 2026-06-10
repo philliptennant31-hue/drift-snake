@@ -13,38 +13,38 @@ const Sound = (() => {
   const midi = m => 440 * Math.pow(2, (m - 69) / 12);
 
   const MOODS = {
-    meadow: {                                   // warm maj7 pad — the original
-      style: 'pad', lp: 760, crackle: 0.10, wave: 0, gap: 6.5, dur: 7.2,
+    meadow: {                                   // warm maj7 pad with birdsong
+      style: 'pad', lp: 760, crackle: 0.10, wave: 0, gap: 6.5, dur: 7.2, nature: 'birds',
       chords: [[53, 57, 60, 64], [57, 60, 64, 67], [50, 53, 57, 60], [46, 50, 53, 57]],
       bass: [41, 45, 38, 34],
     },
-    midnight: {                                 // slower, lower, heavier crackle
-      style: 'pad', lp: 600, crackle: 0.17, wave: 0, gap: 8.2, dur: 9.2,
+    midnight: {                                 // slow low pads, crickets in the dark
+      style: 'pad', lp: 600, crackle: 0.17, wave: 0, gap: 8.2, dur: 9.2, nature: 'crickets',
       chords: [[45, 52, 55, 59], [41, 48, 53, 57], [43, 50, 55, 59], [40, 47, 52, 55]],
       bass: [33, 29, 31, 28],
     },
     tide: {                                     // open chords over an ocean swell
-      style: 'pad', lp: 820, crackle: 0.05, wave: 0.05, gap: 7, dur: 7.8,
+      style: 'pad', lp: 820, crackle: 0.05, wave: 0.05, gap: 7, dur: 7.8, nature: 'water',
       chords: [[48, 55, 59, 62], [45, 52, 57, 60], [41, 48, 55, 57], [43, 50, 55, 59]],
       bass: [36, 33, 29, 31],
     },
-    sakura: {                                   // koto-ish plucks over a soft drone
-      style: 'pluck', lp: 1100, crackle: 0.08, wave: 0, gap: 6, dur: 6.4,
-      chords: [[57, 60, 62, 64, 67, 69, 72], [55, 57, 60, 62, 64, 67, 69]],
-      drone: [45, 52], bass: [45, 43], pluckType: 'triangle',
+    sakura: {                                   // hirajoshi-scale plucks, wind chimes
+      style: 'pluck', lp: 1100, crackle: 0.08, wave: 0, gap: 6.4, dur: 6.8, nature: 'chime',
+      chords: [[57, 59, 60, 64, 65, 69, 72], [64, 65, 69, 71, 72, 76, 77]],
+      drone: [45, 57], bass: [33, 36], pluckType: 'triangle',
     },
     classic: {                                  // cheerful marimba blips
-      style: 'pluck', lp: 1400, crackle: 0.04, wave: 0, gap: 5.5, dur: 5.8,
+      style: 'pluck', lp: 1400, crackle: 0.04, wave: 0, gap: 5.5, dur: 5.8, nature: null,
       chords: [[60, 62, 64, 67, 69, 72], [57, 60, 62, 64, 67, 69]],
       drone: [48, 55], bass: [36, 33], pluckType: 'sine',
     },
-    autumn: {                                   // warm low pads, like late light
-      style: 'pad', lp: 680, crackle: 0.13, wave: 0, gap: 7.5, dur: 8.4,
+    autumn: {                                   // warm low pads, wind in the leaves
+      style: 'pad', lp: 680, crackle: 0.13, wave: 0, gap: 7.5, dur: 8.4, nature: 'wind',
       chords: [[51, 55, 58, 62], [48, 51, 55, 58], [44, 48, 51, 55], [46, 50, 53, 57]],
       bass: [39, 36, 32, 34],
     },
     mono: {                                     // sparse piano-like notes, lots of air
-      style: 'pluck', lp: 1000, crackle: 0.12, wave: 0, gap: 7, dur: 7.4,
+      style: 'pluck', lp: 1000, crackle: 0.14, wave: 0, gap: 7, dur: 7.4, nature: null,
       chords: [[57, 60, 64, 67, 72], [55, 59, 62, 67, 71]],
       drone: [45], bass: [33, 31], pluckType: 'sine',
     },
@@ -175,6 +175,85 @@ const Sound = (() => {
     b.stop(at + dur + 0.1);
   }
 
+  // ----- nature layer: quiet scene sounds that ride the music volume -----
+  // routed around the lowpass so chirps and chimes keep their sparkle
+  function natureTone(at, f0, f1, dur, vol, type) {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type || 'sine';
+    o.frequency.setValueAtTime(f0, at);
+    o.frequency.exponentialRampToValueAtTime(Math.max(f1, 1), at + dur);
+    g.gain.setValueAtTime(vol, at);
+    g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+    o.connect(g).connect(musicFade);
+    o.start(at);
+    o.stop(at + dur + 0.05);
+  }
+
+  let windBuf = null;
+  const NATURE = {
+    birds(at) {
+      const base = 1900 + Math.random() * 700;
+      const n = 2 + Math.floor(Math.random() * 3);
+      for (let i = 0; i < n; i++) {
+        const t = at + i * (0.12 + Math.random() * 0.06);
+        natureTone(t, base * (1 + Math.random() * 0.15), base * (1.25 + Math.random() * 0.2), 0.09, 0.016);
+      }
+    },
+    chime(at) {
+      const notes = [81, 84, 86, 88, 91];
+      let t = at;
+      const n = 3 + Math.floor(Math.random() * 3);
+      for (let i = 0; i < n; i++) {
+        const f = midi(notes[Math.floor(Math.random() * notes.length)]);
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'sine';
+        o.frequency.value = f;
+        g.gain.setValueAtTime(0.011, t);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 2.4);
+        o.connect(g).connect(musicFade);
+        o.start(t);
+        o.stop(t + 2.5);
+        t += 0.15 + Math.random() * 0.3;
+      }
+    },
+    crickets(at) {
+      for (let train = 0; train < 2; train++) {
+        const t0 = at + train * 0.28;
+        for (let i = 0; i < 3; i++) {
+          natureTone(t0 + i * 0.045, 4300, 4200, 0.025, 0.011, 'triangle');
+        }
+      }
+    },
+    water(at) {
+      natureTone(at, 340 + Math.random() * 120, 150, 0.5, 0.014);
+      if (Math.random() < 0.5) natureTone(at + 0.4, 500, 260, 0.3, 0.008);
+    },
+    wind(at) {
+      if (!windBuf) windBuf = noiseBuffer(3, false);
+      const src = ctx.createBufferSource();
+      src.buffer = windBuf;
+      const lp = ctx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.frequency.value = 450;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, at);
+      g.gain.exponentialRampToValueAtTime(0.032, at + 1.6);
+      g.gain.exponentialRampToValueAtTime(0.0001, at + 4.2);
+      src.connect(lp).connect(g).connect(musicFade);
+      src.start(at);
+      src.stop(at + 4.4);
+    },
+  };
+
+  function natureEvents(at, m) {
+    const play = NATURE[m.nature];
+    if (!play) return;
+    const count = 1 + (Math.random() < 0.4 ? 1 : 0);
+    for (let i = 0; i < count; i++) {
+      play(at + 0.3 + Math.random() * (m.gap - 1.2));
+    }
+  }
+
   function playWindow(at, idx) {
     const m = mood();
     if (m.style === 'pad') {
@@ -194,6 +273,7 @@ const Sound = (() => {
         pluckNote(when, pool[Math.floor(Math.random() * pool.length)], m.pluckType);
       }
     }
+    natureEvents(at, m);
   }
 
   function startMusic() {
