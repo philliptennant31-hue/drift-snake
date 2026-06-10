@@ -115,7 +115,7 @@
   // ---------- settings ----------
   const DEFAULTS = {
     mode: 'classic', pace: 'normal', size: 'normal', layout: 'wide',
-    theme: 'meadow', fruits: 'single', ambience: 'on',
+    theme: 'meadow', fruits: 'single', ambience: 'on', musicMode: 'generated',
     sfxVol: 0.8, musicVol: 0.5,
   };
   let settings = { ...DEFAULTS };
@@ -477,7 +477,7 @@
   function startRun(seed) {
     Sound.ensure();
     Sound.setRain(getRain(settings.theme) === 'on');
-    if (Sound.musicWanted()) Sound.startMusic();
+    ensureMusic();
     configureBoard();
     runSeed = seed;
     player = makeSim(seed);
@@ -669,6 +669,14 @@
 
   document.addEventListener('keydown', e => {
     const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    if (state === 'garden') {
+      if (k === 'h') { document.body.classList.toggle('cinema'); return; }
+      if (k === 'Escape' || k === ' ' || k === 'Enter') {
+        e.preventDefault();
+        exitGarden();
+      }
+      return;
+    }
     const d = KEY_DIRS[k];
     if (d) {
       e.preventDefault();
@@ -735,12 +743,71 @@
         Sound.setRain(getRain(settings.theme) === 'on');
         syncRainPills();
       }
+      if (g === 'musicMode') {
+        if (settings.musicMode === 'artists' && !tracksAvailable()) {
+          toast('no artist tracks installed yet');
+          settings.musicMode = 'generated';
+          saveSettings();
+          sync();
+        }
+        Sound.ensure();
+        ensureMusic();
+      }
       configureBoard();
       updateScoreUI();
       drawWardrobePreview();
     });
     sync();
   });
+
+  // ---------- artist music player ----------
+  // real tracks with the artist credited on a now-playing card; the card
+  // links to the artist, which is also the CC-BY attribution
+  let trackAudio = null, trackOrder = [], trackIdx = -1;
+  const tracksAvailable = () => typeof TRACKS !== 'undefined' && TRACKS.length > 0;
+
+  function loadTrack(autoplay) {
+    const t = TRACKS[trackOrder[trackIdx]];
+    trackAudio.src = t.src;
+    $('npText').textContent = `${t.title} — ${t.artist}`;
+    $('nowPlaying').href = t.link;
+    $('nowPlaying').dataset.tip = `${t.license} · click for the artist`;
+    if (autoplay) trackAudio.play().catch(() => {});
+  }
+  function startArtistMusic() {
+    if (!tracksAvailable()) return false;
+    if (!trackAudio) {
+      trackAudio = new Audio();
+      trackAudio.addEventListener('ended', () => {
+        trackIdx = (trackIdx + 1) % trackOrder.length;
+        loadTrack(true);
+      });
+    }
+    if (trackIdx < 0) {
+      trackOrder = TRACKS.map((_, i) => i);
+      for (let i = trackOrder.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [trackOrder[i], trackOrder[j]] = [trackOrder[j], trackOrder[i]];
+      }
+      trackIdx = 0;
+      loadTrack(false);
+    }
+    trackAudio.volume = Math.min(1, settings.musicVol);
+    trackAudio.muted = muted;
+    trackAudio.play().catch(() => {});
+    Sound.stopMusic();
+    $('nowPlaying').classList.remove('hidden');
+    return true;
+  }
+  function stopArtistMusic() {
+    if (trackAudio) trackAudio.pause();
+    $('nowPlaying').classList.add('hidden');
+  }
+  function ensureMusic() {
+    if (settings.musicMode === 'artists' && startArtistMusic()) return;
+    stopArtistMusic();
+    if (Sound.musicWanted()) Sound.startMusic();
+  }
 
   function syncRainPills() {
     document.querySelectorAll('#rainPills .pill').forEach(p =>
@@ -873,11 +940,19 @@
       saveSettings();
       Sound.ensure();
       Sound.setVolumes(settings.sfxVol, settings.musicVol);
+      if (settings.musicMode === 'artists' && tracksAvailable()) {
+        Sound.stopMusic();
+        if (trackAudio) trackAudio.volume = Math.min(1, settings.musicVol);
+        if (settings.musicVol > 0) startArtistMusic();
+      }
     });
   }
 
   $('playBtn').addEventListener('click', () => startRun(challenge ? challenge.seed : randomSeed()));
   $('dailyBtn').addEventListener('click', () => startDaily());
+  $('gardenBtn').addEventListener('click', enterGarden);
+  $('gardenBack').addEventListener('click', exitGarden);
+  $('gardenWrap').addEventListener('click', enterGarden);
   $('againBtn').addEventListener('click', () => {
     if (daily) startRun(dailySeed(daily.n));
     else startRun(challenge ? challenge.seed : randomSeed());
@@ -1066,6 +1141,7 @@
     localStorage.setItem('drift-muted', muted ? '1' : '0');
     Sound.ensure();
     Sound.setMuted(muted);
+    if (trackAudio) trackAudio.muted = muted;
     $('soundOn').style.display = muted ? 'none' : 'block';
     $('soundOff').style.display = muted ? 'block' : 'none';
   });
@@ -1839,12 +1915,13 @@
   }
 
   function drawMapleLeaf(g, s) {
-    // five pointed lobes with deep notches, the classic maple silhouette
+    // the flag-style maple: top spike, trident sides, wide lateral points,
+    // narrowing to a stem — fewer, cleaner points
     const P = [
-      [0, -1], [0.12, -0.5], [0.55, -0.78], [0.42, -0.3], [0.95, -0.3],
-      [0.6, 0.02], [0.72, 0.45], [0.22, 0.28], [0, 0.55],
-      [-0.22, 0.28], [-0.72, 0.45], [-0.6, 0.02], [-0.95, -0.3],
-      [-0.42, -0.3], [-0.55, -0.78], [-0.12, -0.5],
+      [0, -1], [0.10, -0.58], [0.45, -0.70], [0.30, -0.30], [0.92, -0.36],
+      [0.48, -0.06], [0.70, 0.30], [0.18, 0.20], [0.06, 0.42],
+      [-0.06, 0.42], [-0.18, 0.20], [-0.70, 0.30], [-0.48, -0.06],
+      [-0.92, -0.36], [-0.30, -0.30], [-0.45, -0.70], [-0.10, -0.58],
     ];
     g.beginPath();
     g.moveTo(P[0][0] * s, P[0][1] * s);
@@ -1854,8 +1931,8 @@
     g.lineWidth = Math.max(1, s * 0.12);
     g.strokeStyle = g.fillStyle;
     g.beginPath();
-    g.moveTo(0, s * 0.55);
-    g.lineTo(0, s * 0.95);
+    g.moveTo(0, s * 0.42);
+    g.lineTo(0, s * 0.85);
     g.stroke();
   }
 
@@ -1870,12 +1947,12 @@
     for (let i = ambient.length - 1; i >= 0; i--) {
       const a = ambient[i];
       if (a.kind === 'leaf') {
-        a.y += dt * cell * (a.maple ? 0.0006 : 0.0009);
+        a.y += dt * cell * (a.maple ? 0.00045 : 0.0009);
         const x = a.x + Math.sin(now / 1100 + a.phase) * cell * 0.5;
         if (a.y > H + cell * 0.5) { ambient.splice(i, 1); continue; }
         ctx.save();
         ctx.translate(x, a.y);
-        ctx.rotate(Math.sin(now / (a.maple ? 1300 : 800) + a.phase) * 0.8 + (a.maple ? a.phase : 0));
+        ctx.rotate(Math.sin(now / (a.maple ? 1700 : 800) + a.phase) * 0.8 + (a.maple ? a.phase : 0));
         ctx.globalAlpha = 0.78;
         ctx.fillStyle = a.color || '#9cbf8e';
         if (a.maple) {
@@ -1963,7 +2040,8 @@
         // two slow drift frequencies layered for an organic, unhurried wander
         a.x += (Math.cos(now / 1500 * sp + a.phase) * 0.16 + Math.cos(now / 480 + a.phase * 3) * 0.06) * sp;
         a.y += (Math.sin(now / 1250 * sp + a.phase * 1.7) * 0.16 + Math.sin(now / 410 + a.phase * 2.2) * 0.05) * sp;
-        const glow = 0.30 + 0.40 * Math.sin(now / (260 + sz * 90) + a.phase);
+        // glow dims but never fully vanishes, on a slow breath-like cycle
+        const glow = 0.42 + 0.28 * Math.sin(now / (700 + sz * 250) + a.phase);
         const fade = Math.min(1, (now - a.born) / 3600, (30000 - (now - a.born)) / 3600);
         ctx.globalAlpha = Math.max(0, glow * fade);
         ctx.fillStyle = '#f4d35e';
@@ -2226,12 +2304,225 @@
     $('gardenLabel').textContent = `garden · ${blooms} bloom${blooms === 1 ? '' : 's'}`;
   }
 
+  // ---------- the garden, as a place you can visit ----------
+  function enterGarden() {
+    if (state !== 'menu' && state !== 'gameover') return;
+    player = null; ghost = null; daily = null;
+    state = 'garden';
+    showOverlay(null);
+    $('gardenBack').classList.remove('hidden');
+    Sound.ui();
+  }
+  function exitGarden() {
+    state = 'menu';
+    $('gardenBack').classList.add('hidden');
+    updateScoreUI();
+    showOverlay('menu');
+    Sound.ui();
+  }
+
+  function drawSleepingSnake(now, cx, cy) {
+    const skin = SKINS[prog.skin] || SKINS.drift;
+    const breathe = 1 + Math.sin(now / 1900) * 0.02;
+    const U = cell * 0.9;
+    const BW = U * 0.62;
+    const pts = [];
+    for (let t = 0; t <= 4.6; t += 0.18) {
+      const r = U * (0.25 + t * 0.21) * breathe;
+      pts.push({ x: cx + Math.cos(t + 2.4) * r, y: cy + Math.sin(t + 2.4) * r * 0.62 });
+    }
+    ctx.fillStyle = 'rgba(0,0,0,.08)';
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + U * 0.8, U * 1.6, U * 0.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    const grad = ctx.createLinearGradient(cx - U, cy, cx + U * 1.5, cy);
+    grad.addColorStop(0, skin.b);
+    grad.addColorStop(1, skin.a);
+    ctx.strokeStyle = grad;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    for (let i = 0; i < pts.length - 1; i++) {
+      ctx.lineWidth = BW * Math.min(1, 0.35 + (i / pts.length) * 0.95);
+      ctx.beginPath();
+      ctx.moveTo(pts[i].x, pts[i].y);
+      ctx.lineTo(pts[i + 1].x, pts[i + 1].y);
+      ctx.stroke();
+    }
+    const hp = pts[pts.length - 1];
+    ctx.fillStyle = skin.head;
+    ctx.beginPath();
+    ctx.arc(hp.x, hp.y, BW * 0.62, 0, Math.PI * 2);
+    ctx.fill();
+    drawFace(ctx, hp.x, hp.y, 1, 0, BW * 1.5, false, true);
+    if (prog.hat !== 'none') drawHat(ctx, prog.hat, hp.x, hp.y, BW * 1.5);
+    ctx.textAlign = 'center';
+    for (let k = 0; k < 3; k++) {
+      const ph = ((now / 1400) + k * 0.33) % 1;
+      ctx.globalAlpha = Math.max(0, (1 - ph) * 0.65);
+      ctx.fillStyle = '#6f665b';
+      ctx.font = `700 ${Math.round(cell * (0.2 + k * 0.05 + ph * 0.12))}px Quicksand, sans-serif`;
+      ctx.fillText('z', hp.x + cell * (0.55 + ph * 0.5 + k * 0.2), hp.y - cell * (0.45 + ph * 0.7 + k * 0.25));
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function drawGardenScene(now) {
+    const W = cols * cell, H = rows * cell;
+    const horizon = H * 0.34;
+    let g = ctx.createLinearGradient(0, 0, 0, horizon);
+    g.addColorStop(0, '#cfe3f2');
+    g.addColorStop(1, '#f4ecd8');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, horizon + 1);
+    ctx.fillStyle = 'rgba(247,227,176,.35)';
+    ctx.beginPath();
+    ctx.arc(W * 0.82, horizon * 0.45, cell * 0.85, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(247,227,176,.95)';
+    ctx.beginPath();
+    ctx.arc(W * 0.82, horizon * 0.45, cell * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+    g = ctx.createLinearGradient(0, horizon, 0, H);
+    g.addColorStop(0, '#cde4bd');
+    g.addColorStop(1, '#b7d6a6');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, horizon, W, H - horizon);
+
+    const blooms = Math.floor(prog.fruitTotal / 10);
+
+    // a tree takes root every 100 blooms
+    const trees = Math.min(6, Math.floor(blooms / 100));
+    for (let ti = 0; ti < trees; ti++) {
+      const r = mulberry32(555 + ti * 131);
+      const tx = W * (0.08 + 0.84 * ((ti + r() * 0.6) / 6));
+      const th = cell * (1.2 + r() * 0.5);
+      ctx.fillStyle = '#9a7350';
+      ctx.fillRect(tx - cell * 0.06, horizon - th * 0.5, cell * 0.12, th * 0.55);
+      ctx.fillStyle = ['#88b884', '#7da379', '#94bd8b'][ti % 3];
+      for (const [ox, oy, rr] of [[0, 0.78, 0.45], [-0.32, 0.6, 0.32], [0.32, 0.62, 0.34]]) {
+        ctx.beginPath();
+        ctx.arc(tx + ox * th, horizon - th * oy, th * rr, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    const gr = mulberry32(909);
+    ctx.strokeStyle = 'rgba(110,150,100,.4)';
+    ctx.lineWidth = Math.max(1, cell * 0.03);
+    ctx.lineCap = 'round';
+    for (let i = 0; i < W / 12; i++) {
+      const x = gr() * W, y = horizon + gr() * (H - horizon);
+      const bh = cell * (0.1 + gr() * 0.16) * (0.6 + (y - horizon) / (H - horizon));
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.quadraticCurveTo(x + Math.sin(now / 1500 + i) * 2, y - bh * 0.6, x + (gr() - 0.5) * 4, y - bh);
+      ctx.stroke();
+    }
+
+    // every flower you have ever grown, nearest drawn last
+    const log = prog.bloomLog || '';
+    const legacy = blooms - log.length;
+    const drawn = Math.min(blooms, 300);
+    const flowers = [];
+    for (let i = 0; i < drawn; i++) {
+      const r = mulberry32(2000 + i * 7919);
+      const set = i >= legacy ? (WORLD_FLOWERS[log[i - legacy]] || FLOWER_COLORS) : FLOWER_COLORS;
+      flowers.push({
+        x: W * (0.03 + r() * 0.94),
+        y: horizon + cell * 0.35 + r() * (H - horizon - cell * 1.0),
+        color: set[Math.floor(r() * set.length)],
+        seed: r(),
+      });
+    }
+    flowers.sort((a, b) => a.y - b.y);
+    for (const f of flowers) {
+      const depth = 0.65 + 0.6 * (f.y - horizon) / (H - horizon);
+      const sc = cell * 0.052 * depth;
+      const stemH = sc * (4.5 + f.seed * 2.5);
+      ctx.strokeStyle = '#7da379';
+      ctx.lineWidth = Math.max(1, sc * 0.55);
+      ctx.beginPath();
+      ctx.moveTo(f.x, f.y);
+      ctx.quadraticCurveTo(f.x + Math.sin(now / 1800 + f.x) * 1.5, f.y - stemH * 0.6, f.x, f.y - stemH);
+      ctx.stroke();
+      ctx.fillStyle = f.color;
+      for (let p = 0; p < 5; p++) {
+        const a = (p / 5) * Math.PI * 2 + f.seed * 6;
+        ctx.beginPath();
+        ctx.arc(f.x + Math.cos(a) * sc * 1.25, f.y - stemH + Math.sin(a) * sc * 1.25, sc, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = '#f8e9a1';
+      ctx.beginPath();
+      ctx.arc(f.x, f.y - stemH, sc * 0.75, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    drawSleepingSnake(now, W * 0.5, H * 0.66);
+
+    // a couple of butterflies and a bee keep the snake company
+    for (let k = 0; k < 3; k++) {
+      const bx = W * (0.5 + 0.36 * Math.sin(now / (3600 + k * 700) + k * 2.1));
+      const by = horizon * 0.6 + (H * 0.7 - horizon * 0.6) * (0.5 + 0.42 * Math.sin(now / (2900 + k * 500) + k * 1.3));
+      const flap = Math.abs(Math.sin(now / 130 + k * 2));
+      if (k === 2) {
+        const s = cell * 0.08;
+        ctx.fillStyle = 'rgba(255,255,255,.75)';
+        ctx.beginPath();
+        ctx.ellipse(bx - s * 0.2, by - s * (0.9 + flap * 0.5), s * 0.7, s * 0.45, -0.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#f2c84b';
+        ctx.beginPath();
+        ctx.ellipse(bx, by, s * 1.15, s * 0.8, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#6b4f2e';
+        ctx.lineWidth = Math.max(1.2, s * 0.32);
+        ctx.beginPath();
+        ctx.moveTo(bx - s * 0.3, by - s * 0.7);
+        ctx.lineTo(bx - s * 0.3, by + s * 0.7);
+        ctx.stroke();
+      } else {
+        ctx.fillStyle = ['#ffffff', '#ffb3c0'][k];
+        for (const s of [-1, 1]) {
+          ctx.beginPath();
+          ctx.ellipse(bx + s * cell * 0.08 * (0.3 + flap * 0.7), by,
+            cell * 0.10 * (0.3 + flap * 0.7), cell * 0.12, s * 0.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = 'rgba(90,80,70,.8)';
+        ctx.beginPath();
+        ctx.ellipse(bx, by, cell * 0.02, cell * 0.08, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = '#6f665b';
+    ctx.font = `700 ${Math.round(cell * 0.55)}px Quicksand, sans-serif`;
+    ctx.fillText('your garden', W / 2, cell * 0.95);
+    ctx.fillStyle = '#a99e8f';
+    ctx.font = `700 ${Math.round(cell * 0.3)}px Quicksand, sans-serif`;
+    ctx.fillText(
+      blooms === 0
+        ? 'eat 10 fruit to plant your first flower'
+        : `${blooms} bloom${blooms === 1 ? '' : 's'} · ${prog.fruitTotal} fruit` +
+          (trees ? ` · ${trees} tree${trees === 1 ? '' : 's'}` : ''),
+      W / 2, cell * 1.5);
+  }
+
   // ---------- main loop ----------
   function frame(now) {
     requestAnimationFrame(frame);
     if (!lastTime) { lastTime = now; return; }
     const dt = Math.min(now - lastTime, 100);
     lastTime = now;
+
+    if (state === 'garden') {
+      ctx.clearRect(0, 0, cols * cell, rows * cell);
+      drawGardenScene(now);
+      return;
+    }
 
     if (state === 'playing') {
       acc += dt;
@@ -2331,6 +2622,7 @@
     Sound.ensure();
     Sound.setVolumes(settings.sfxVol, settings.musicVol);
     Sound.setRain(getRain(settings.theme) === 'on');
+    ensureMusic();
   };
   document.addEventListener('pointerdown', kickAudio);
   document.addEventListener('keydown', kickAudio);
