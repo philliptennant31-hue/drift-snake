@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>drift — a cozy snake game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">drift · snake</div>
+  <div class="spacer"></div>
+  <div class="chip hidden" id="goalChip" title="Challenge goal">
+    <span class="label">BEAT</span>
+    <span id="goal">0</span>
+  </div>
+  <div class="chip" title="Fruit eaten">
+    <svg width="15" height="15" viewBox="0 0 20 20"><circle cx="10" cy="11" r="7.5" fill="var(--fruit)"/><circle cx="7.5" cy="8.8" r="2" fill="#fff" opacity=".55"/><path d="M10 4.5 Q10.5 2 13 1.8 Q12.8 4.4 10 4.5" fill="var(--fruit-leaf)"/></svg>
+    <span id="score">0</span>
+  </div>
+  <div class="chip" id="bestChip" title="Best score">
+    <span class="label">BEST</span>
+    <span id="best">0</span>
+  </div>
+  <button class="icon-btn" id="muteBtn" title="Toggle sound">
+    <svg id="soundOn" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z" fill="currentColor" stroke="none"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>
+    <svg id="soundOff" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M11 5 6 9H2v6h4l5 4V5z" fill="currentColor" stroke="none"/><line x1="16" y1="9" x2="22" y2="15"/><line x1="22" y1="9" x2="16" y2="15"/></svg>
+  </button>
+</div>
+
+<div class="stage">
+  <canvas id="game"></canvas>
+
+  <div class="overlay show" id="menu">
+    <h1>drift</h1>
+    <p>a cozy little snake game</p>
+    <div class="note hidden" id="challengeNote"></div>
+    <div class="opts">
+      <div class="opt-row">
+        <div class="label">mood</div>
+        <div class="pills" data-group="mode">
+          <button class="pill" data-v="classic">classic</button>
+          <button class="pill" data-v="zen">zen</button>
+        </div>
+      </div>
+      <div class="opt-row">
+        <div class="label">pace</div>
+        <div class="pills" data-group="pace">
+          <button class="pill" data-v="slow">drift</button>
+          <button class="pill" data-v="normal">stroll</button>
+          <button class="pill" data-v="fast">scurry</button>
+        </div>
+      </div>
+      <div class="opt-row">
+        <div class="label">meadow</div>
+        <div class="pills" data-group="size">
+          <button class="pill" data-v="small">snug</button>
+          <button class="pill" data-v="normal">cozy</button>
+          <button class="pill" data-v="large">roomy</button>
+        </div>
+      </div>
+      <div class="opt-row">
+        <div class="label">fruit</div>
+        <div class="pills" data-group="fruits">
+          <button class="pill" data-v="single">single</button>
+          <button class="pill" data-v="plenty">plenty</button>
+        </div>
+      </div>
+      <div class="opt-row">
+        <div class="label">shape</div>
+        <div class="pills" data-group="layout">
+          <button class="pill" data-v="wide">wide</button>
+          <button class="pill" data-v="tall">tall</button>
+        </div>
+      </div>
+      <div class="opt-row">
+        <div class="label">palette</div>
+        <div class="pills" data-group="theme">
+          <button class="pill dot" data-v="meadow" title="meadow" style="background:#8fa3e0"></button>
+          <button class="pill dot" data-v="midnight" title="midnight" style="background:#211f2b"></button>
+          <button class="pill dot" data-v="classic" title="classic" style="background:#aad751"></button>
+          <button class="pill dot" data-v="sakura" title="sakura" style="background:#e8aec4"></button>
+          <button class="pill dot" data-v="tide" title="tide" style="background:#5fa8a0"></button>
+        </div>
+      </div>
+      <div class="opt-row wide">
+        <div class="sliders">
+          <div class="slider-box">
+            <div class="label">music</div>
+            <input type="range" id="musicVol" min="0" max="100" value="50">
+          </div>
+          <div class="slider-box">
+            <div class="label">sfx</div>
+            <input type="range" id="sfxVol" min="0" max="100" value="80">
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="play-btn" id="playBtn">play</button>
+  </div>
+
+  <div class="overlay" id="ready">
+    <h2>ready…</h2>
+    <p class="hint">press an <kbd>arrow</kbd> or <kbd>wasd</kbd> to slither</p>
+  </div>
+
+  <div class="overlay" id="paused">
+    <h2>resting</h2>
+    <p class="hint"><kbd>space</kbd> to keep going</p>
+    <div class="btn-row">
+      <button class="play-btn small" id="resumeBtn">resume</button>
+      <button class="ghost-btn" id="pauseMenuBtn">back to menu</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="gameover">
+    <h2 id="goTitle">oh well</h2>
+    <div class="big-score" id="goScore">0</div>
+    <p class="sub" id="goBest">best 0</p>
+    <div class="btn-row">
+      <button class="play-btn small" id="againBtn">new run</button>
+      <button class="play-btn small" id="raceBtn">race your ghost</button>
+    </div>
+    <div class="btn-row">
+      <button class="ghost-btn" id="shareBtn">share challenge</button>
+      <button class="ghost-btn" id="menuBtn">back to menu</button>
+    </div>
+  </div>
+</div>
+
+<p class="hint"><kbd>↑←↓→</kbd> / <kbd>wasd</kbd> move &nbsp;·&nbsp; <kbd>space</kbd> pause</p>
+
+<script src="audio.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
