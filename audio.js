@@ -23,7 +23,7 @@ const Sound = (() => {
 
   const MOODS = {
     meadow: {
-      style: 'pad', padType: 'triangle', saw: true, melody: true, attack: 1.5,
+      style: 'pad', padType: 'triangle', saw: true, melody: 'celesta', attack: 1.5,
       lp: 760, crackle: 0.10, wave: 0, gap: 6.5, dur: 7.2, nature: 'birds',
       chords: [[53, 57, 60, 64], [57, 60, 64, 67], [50, 53, 57, 60], [46, 50, 53, 57]],
       bass: [41, 45, 38, 34],
@@ -41,9 +41,10 @@ const Sound = (() => {
       bass: [36, 33, 29, 31],
     },
     sakura: {
-      style: 'koto',
-      lp: 1300, crackle: 0.07, wave: 0, gap: 7.2, dur: 7.2, nature: 'chime',
-      bass: [33, 36],
+      style: 'pad', padType: 'triangle', saw: false, melody: 'koto', attack: 2.0,
+      lp: 800, crackle: 0.06, wave: 0, gap: 7, dur: 7.6, nature: 'chime',
+      chords: [[45, 52, 57, 64], [43, 50, 55, 62], [41, 48, 53, 60], [45, 52, 57, 62]],
+      bass: [33, 31, 29, 33],
     },
     classic: {
       style: 'chip',
@@ -357,25 +358,22 @@ const Sound = (() => {
         if (m.saw) padNote(at, n, m, 0.012, 'sawtooth', 7);
       }
       bassNote(at, m.bass[idx % m.bass.length], m.dur);
-      if (m.melody && Math.random() < 0.8) {
+      if (m.melody === 'celesta' && Math.random() < 0.8) {
         const pool = m.chords[idx % m.chords.length];
         const n = 1 + Math.floor(Math.random() * 2);
         for (let i = 0; i < n; i++) {
           celestaNote(at + 1 + Math.random() * (m.gap - 2), pool[Math.floor(Math.random() * pool.length)] + 12);
         }
-      }
-    } else if (m.style === 'koto') {
-      padNote(at, 45, m, 0.015, 'triangle');
-      padNote(at, 52, m, 0.011, 'triangle');
-      bassNote(at, m.bass[idx % m.bass.length], m.dur);
-      // one intentional phrase: enter high, walk mostly downward
-      let scaleIdx = 5 + Math.floor(Math.random() * 4);
-      let t = at + 0.3 + Math.random() * 0.8;
-      const notes = 3 + Math.floor(Math.random() * 3);
-      for (let i = 0; i < notes; i++) {
-        kotoNote(t, HIRAJOSHI[Math.max(0, Math.min(HIRAJOSHI.length - 1, scaleIdx))]);
-        scaleIdx += Math.random() < 0.72 ? -(1 + Math.floor(Math.random() * 2)) : 1;
-        t += [0.45, 0.7, 0.95, 1.5][Math.floor(Math.random() * 4)];
+      } else if (m.melody === 'koto' && Math.random() < 0.85) {
+        // a sparse koto accent drifting down the hirajoshi scale over the pads
+        let scaleIdx = 5 + Math.floor(Math.random() * 4);
+        let t = at + 1 + Math.random() * 1.5;
+        const notes = 2 + Math.floor(Math.random() * 2);
+        for (let i = 0; i < notes; i++) {
+          kotoNote(t, HIRAJOSHI[Math.max(0, Math.min(HIRAJOSHI.length - 1, scaleIdx))]);
+          scaleIdx -= 1 + Math.floor(Math.random() * 2);
+          t += 0.6 + Math.random() * 0.9;
+        }
       }
     } else if (m.style === 'chip') {
       const scale = [60, 62, 64, 67, 69, 72, 74];
@@ -434,33 +432,43 @@ const Sound = (() => {
     }
   }
 
-  // ----- rain: pitter-patter — individual drops over a soft hiss bed -----
+  // ----- rain: real rain is mostly hiss — broadband noise shaped to the
+  // high-mids, with soft unpitched patter underneath (no tonal pings) -----
   let rainTimer = null, rainBuf = null;
   function startRainNode() {
     if (rainGain || !ctx) return;
     rainGain = ctx.createGain();
     rainGain.gain.value = 0.0001;
     rainGain.connect(master);
+    const hp = ctx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.value = 900;
     const lp = ctx.createBiquadFilter();
     lp.type = 'lowpass';
-    lp.frequency.value = 900;
+    lp.frequency.value = 6000;
     const bed = ctx.createGain();
-    bed.gain.value = 0.012;
-    loopNoise(noiseBuffer(2.5, false)).connect(lp);
-    lp.connect(bed).connect(rainGain);
-    rainBuf = noiseBuffer(0.08, false);
+    bed.gain.value = 0.034;
+    loopNoise(noiseBuffer(2.5, false)).connect(hp);
+    hp.connect(lp).connect(bed).connect(rainGain);
+    // fast faint shimmer so the hiss doesn't sound frozen
+    const lfo = ctx.createOscillator();
+    lfo.frequency.value = 9;
+    const lg = ctx.createGain();
+    lg.gain.value = 0.007;
+    lfo.connect(lg).connect(bed.gain);
+    lfo.start();
+    rainBuf = noiseBuffer(0.05, false);
   }
   function dropTick(at) {
     const src = ctx.createBufferSource();
     src.buffer = rainBuf;
-    const bp = ctx.createBiquadFilter();
-    bp.type = 'bandpass';
-    bp.frequency.value = 1600 + Math.random() * 3800;
-    bp.Q.value = 6;
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 1600 + Math.random() * 2000;
     const g = ctx.createGain();
-    g.gain.setValueAtTime(0.012 + Math.random() * 0.05, at);
-    g.gain.exponentialRampToValueAtTime(0.0001, at + 0.035 + Math.random() * 0.05);
-    src.connect(bp).connect(g).connect(rainGain);
+    g.gain.setValueAtTime(0.005 + Math.random() * 0.015, at);
+    g.gain.exponentialRampToValueAtTime(0.0001, at + 0.018 + Math.random() * 0.03);
+    src.connect(lp).connect(g).connect(rainGain);
     src.start(at);
   }
   function startRainDrops() {
@@ -469,7 +477,7 @@ const Sound = (() => {
     rainTimer = setInterval(() => {
       while (nextDrop < ctx.currentTime + 0.6) {
         try { dropTick(nextDrop); } catch (e) {}
-        nextDrop += 0.04 + Math.random() * 0.13;
+        nextDrop += 0.03 + Math.random() * 0.08;
       }
     }, 200);
   }

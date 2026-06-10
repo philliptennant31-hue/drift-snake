@@ -1449,6 +1449,10 @@
   function drawHat(g, kind, hx, hy, s) {
     const ctx = g;
     ctx.save();
+    // seat the hat on the head — larger and lower, worn rather than floating
+    ctx.translate(hx, hy);
+    ctx.scale(1.3, 1.3);
+    ctx.translate(-hx, -hy + s * 0.055);
     ctx.lineCap = 'round';
     if (kind === 'sprout') {
       ctx.strokeStyle = '#6da06b';
@@ -1725,20 +1729,30 @@
     const W = cols * cell, H = rows * cell;
     const theme = settings.theme;
     if (theme === 'meadow') {
+      if (!ambient.some(a => a.kind === 'bee') && Math.random() < 0.12) {
+        const dir = Math.random() < 0.5 ? 1 : -1;
+        ambient.push({
+          kind: 'bee', dir,
+          x: dir > 0 ? -cell : W + cell,
+          y: H * (0.15 + Math.random() * 0.6),
+          phase: Math.random() * 6.28,
+        });
+        return;
+      }
       const flies = ambient.filter(a => a.kind === 'butterfly').length;
       if (flies < 4 && Math.random() < 0.35) {
         ambient.push({
           kind: 'butterfly', x: Math.random() < 0.5 ? -cell * 0.4 : W + cell * 0.4,
           y: H * (0.15 + Math.random() * 0.7), phase: Math.random() * 6.28, born: now,
-          color: ['#ffffff', '#ffd98e', '#d9c9ff'][Math.floor(Math.random() * 3)],
+          color: ['#ffffff', '#ffd98e', '#d9c9ff', '#ffb3c0', '#bde3ff', '#ffa66b'][Math.floor(Math.random() * 6)],
         });
         return;
       }
       if (ambient.length >= 16) return;
       ambient.push({ kind: 'leaf', x: Math.random() * W, y: -cell * 0.4, phase: Math.random() * 6.28 });
     } else if (theme === 'sakura') {
-      if (ambient.length >= 24) return;
-      const flurry = Math.random() < 0.22 ? 5 + Math.floor(Math.random() * 4) : 1;
+      if (ambient.length >= 30) return;
+      const flurry = Math.random() < 0.3 ? 6 + Math.floor(Math.random() * 4) : 2;
       for (let i = 0; i < flurry; i++) {
         ambient.push({
           kind: 'petal', x: Math.random() * W,
@@ -1746,11 +1760,15 @@
         });
       }
     } else if (theme === 'classic') {
-      // little screen-glint sparkles, like an old handheld catching the light
-      if (ambient.length >= 8) return;
+      // chunky pixel butterflies, like sprites that escaped an older game
+      if (ambient.filter(a => a.kind === 'pixelfly').length >= 3) return;
+      const dir = Math.random() < 0.5 ? 1 : -1;
       ambient.push({
-        kind: 'sparkle', x: Math.random() * W, y: Math.random() * H,
-        born: now, dur: 1400 + Math.random() * 900, phase: Math.random() * 6.28,
+        kind: 'pixelfly', dir,
+        x: dir > 0 ? -cell : W + cell,
+        y: H * (0.1 + Math.random() * 0.8),
+        phase: Math.random() * 6.28, born: now,
+        color: ['#4775ea', '#e7471d', '#ffd23f'][Math.floor(Math.random() * 3)],
       });
     } else if (theme === 'autumn') {
       if (ambient.length >= 16) return;
@@ -1821,10 +1839,12 @@
   }
 
   function drawMapleLeaf(g, s) {
+    // five pointed lobes with deep notches, the classic maple silhouette
     const P = [
-      [0, -1], [0.18, -0.5], [0.75, -0.55], [0.32, -0.05], [0.65, 0.25],
-      [0.12, 0.18], [0, 0.35], [-0.12, 0.18], [-0.65, 0.25], [-0.32, -0.05],
-      [-0.75, -0.55], [-0.18, -0.5],
+      [0, -1], [0.12, -0.5], [0.55, -0.78], [0.42, -0.3], [0.95, -0.3],
+      [0.6, 0.02], [0.72, 0.45], [0.22, 0.28], [0, 0.55],
+      [-0.22, 0.28], [-0.72, 0.45], [-0.6, 0.02], [-0.95, -0.3],
+      [-0.42, -0.3], [-0.55, -0.78], [-0.12, -0.5],
     ];
     g.beginPath();
     g.moveTo(P[0][0] * s, P[0][1] * s);
@@ -1834,8 +1854,8 @@
     g.lineWidth = Math.max(1, s * 0.12);
     g.strokeStyle = g.fillStyle;
     g.beginPath();
-    g.moveTo(0, s * 0.35);
-    g.lineTo(0, s * 0.7);
+    g.moveTo(0, s * 0.55);
+    g.lineTo(0, s * 0.95);
     g.stroke();
   }
 
@@ -1850,16 +1870,16 @@
     for (let i = ambient.length - 1; i >= 0; i--) {
       const a = ambient[i];
       if (a.kind === 'leaf') {
-        a.y += dt * cell * 0.0009;
+        a.y += dt * cell * (a.maple ? 0.0006 : 0.0009);
         const x = a.x + Math.sin(now / 1100 + a.phase) * cell * 0.5;
         if (a.y > H + cell * 0.5) { ambient.splice(i, 1); continue; }
         ctx.save();
         ctx.translate(x, a.y);
-        ctx.rotate(Math.sin(now / 800 + a.phase) * 0.8 + (a.maple ? a.phase : 0));
-        ctx.globalAlpha = 0.75;
+        ctx.rotate(Math.sin(now / (a.maple ? 1300 : 800) + a.phase) * 0.8 + (a.maple ? a.phase : 0));
+        ctx.globalAlpha = 0.78;
         ctx.fillStyle = a.color || '#9cbf8e';
         if (a.maple) {
-          drawMapleLeaf(ctx, cell * 0.17);
+          drawMapleLeaf(ctx, cell * 0.18);
         } else {
           ctx.beginPath();
           ctx.ellipse(0, 0, cell * 0.14, cell * 0.07, 0, 0, Math.PI * 2);
@@ -1873,17 +1893,17 @@
         ctx.save();
         ctx.translate(x, a.y);
         ctx.rotate(Math.sin(now / 700 + a.phase) * 1.1 + a.phase);
-        ctx.globalAlpha = 0.85;
-        const s = cell * 0.105;
-        ctx.fillStyle = '#f6bfd2';
+        ctx.globalAlpha = 0.95;
+        const s = cell * 0.15;
+        ctx.fillStyle = '#f293b9';
         ctx.beginPath();
         ctx.moveTo(0, -s * 1.35);
         ctx.quadraticCurveTo(s * 1.05, -s * 0.35, 0, s);
         ctx.quadraticCurveTo(-s * 1.05, -s * 0.35, 0, -s * 1.35);
         ctx.fill();
-        ctx.fillStyle = 'rgba(255,255,255,.5)';
+        ctx.fillStyle = 'rgba(255,255,255,.55)';
         ctx.beginPath();
-        ctx.ellipse(0, -s * 0.15, s * 0.32, s * 0.5, 0, 0, Math.PI * 2);
+        ctx.ellipse(0, -s * 0.15, s * 0.30, s * 0.48, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
       } else if (a.kind === 'snow') {
@@ -1895,27 +1915,56 @@
         ctx.beginPath();
         ctx.arc(x, a.y, a.r, 0, Math.PI * 2);
         ctx.fill();
-      } else if (a.kind === 'sparkle') {
-        const t = (now - a.born) / a.dur;
-        if (t >= 1) { ambient.splice(i, 1); continue; }
-        const al = Math.sin(t * Math.PI);
-        const s = cell * 0.11 * (0.6 + 0.4 * al);
-        ctx.globalAlpha = al * 0.8;
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = Math.max(1.4, cell * 0.045);
-        ctx.lineCap = 'round';
+      } else if (a.kind === 'pixelfly') {
+        a.x += a.dir * dt * cell * 0.0006;
+        const y = a.y + Math.sin(now / 500 + a.phase) * cell * 0.35;
+        if ((a.dir > 0 && a.x > W + cell) || (a.dir < 0 && a.x < -cell)) { ambient.splice(i, 1); continue; }
+        // quantized to a chunky pixel grid, wings flap by frame
+        const px = Math.round(a.x / 3) * 3, py = Math.round(y / 3) * 3;
+        const u = Math.max(2, Math.round(cell * 0.075));
+        const open = Math.floor(now / 160 + a.phase) % 2 === 0;
+        ctx.globalAlpha = 0.85;
+        ctx.fillStyle = a.color;
+        if (open) {
+          ctx.fillRect(px - u * 2, py - u, u, u * 2);
+          ctx.fillRect(px + u, py - u, u, u * 2);
+        } else {
+          ctx.fillRect(px - u * 1.4, py - u * 1.6, u, u * 1.4);
+          ctx.fillRect(px + u * 0.4, py - u * 1.6, u, u * 1.4);
+        }
+        ctx.fillStyle = '#3c4043';
+        ctx.fillRect(px - u / 2, py - u * 1.2, u, u * 2.4);
+      } else if (a.kind === 'bee') {
+        a.x += a.dir * dt * cell * 0.0013;
+        const y = a.y + Math.sin(now / 280 + a.phase) * cell * 0.22 + Math.sin(now / 900 + a.phase) * cell * 0.4;
+        if ((a.dir > 0 && a.x > W + cell) || (a.dir < 0 && a.x < -cell)) { ambient.splice(i, 1); continue; }
+        ctx.globalAlpha = 0.95;
+        const s = cell * 0.09;
+        const flap = Math.abs(Math.sin(now / 60 + a.phase));
+        ctx.fillStyle = 'rgba(255,255,255,.75)';
         ctx.beginPath();
-        ctx.moveTo(a.x - s, a.y); ctx.lineTo(a.x + s, a.y);
-        ctx.moveTo(a.x, a.y - s); ctx.lineTo(a.x, a.y + s);
-        ctx.stroke();
+        ctx.ellipse(a.x - a.dir * s * 0.2, y - s * (0.9 + flap * 0.5), s * 0.7, s * 0.45, -0.5 * a.dir, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#f2c84b';
+        ctx.beginPath();
+        ctx.ellipse(a.x, y, s * 1.15, s * 0.8, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#6b4f2e';
+        ctx.lineWidth = Math.max(1.2, s * 0.32);
+        for (const ox of [-0.35, 0.25]) {
+          ctx.beginPath();
+          ctx.moveTo(a.x + ox * s, y - s * 0.7);
+          ctx.lineTo(a.x + ox * s, y + s * 0.7);
+          ctx.stroke();
+        }
       } else if (a.kind === 'firefly') {
-        if (now - a.born > 14000) { ambient.splice(i, 1); continue; }
+        if (now - a.born > 30000) { ambient.splice(i, 1); continue; }
         const sz = a.size || 1, sp = a.sp || 1;
         // two slow drift frequencies layered for an organic, unhurried wander
         a.x += (Math.cos(now / 1500 * sp + a.phase) * 0.16 + Math.cos(now / 480 + a.phase * 3) * 0.06) * sp;
         a.y += (Math.sin(now / 1250 * sp + a.phase * 1.7) * 0.16 + Math.sin(now / 410 + a.phase * 2.2) * 0.05) * sp;
         const glow = 0.30 + 0.40 * Math.sin(now / (260 + sz * 90) + a.phase);
-        const fade = Math.min(1, (now - a.born) / 1200, (14000 - (now - a.born)) / 1200);
+        const fade = Math.min(1, (now - a.born) / 3600, (30000 - (now - a.born)) / 3600);
         ctx.globalAlpha = Math.max(0, glow * fade);
         ctx.fillStyle = '#f4d35e';
         ctx.beginPath(); ctx.arc(a.x, a.y, cell * 0.11 * sz, 0, Math.PI * 2); ctx.fill();
