@@ -88,14 +88,14 @@
   // ---------- skins & hats ----------
   const SKINS = {
     drift:   { a: '#8fa3e0', b: '#b3a7e6', head: '#7b90d6' },
-    sunset:  { a: '#f2a36b', b: '#ef8f86', head: '#e08a52', unlock: { timed: 'meadow', n: 20 },   hint: 'eat 20 timed oranges in the meadow palette' },
-    dragon:  { a: '#e87fa8', b: '#c86fc9', head: '#d96a97', unlock: { timed: 'sakura', n: 20 },   hint: 'eat 20 timed dragon fruit in the sakura palette' },
-    retro:   { a: '#58b368', b: '#9ed36a', head: '#46a356', unlock: { timed: 'classic', n: 20 },  hint: 'eat 20 timed kiwis in the classic palette' },
-    galaxy:  { a: '#5c6bc0', b: '#9575cd', head: '#4a58a8', unlock: { timed: 'midnight', n: 20 }, hint: 'eat 20 timed starfruit in the midnight palette' },
-    deepsea: { a: '#26818e', b: '#4ab3a8', head: '#1f6f7b', unlock: { timed: 'tide', n: 20 },     hint: 'eat 20 timed blueberries in the tide palette' },
-    ember:   { a: '#d97742', b: '#a8524a', head: '#c2632f', unlock: { timed: 'autumn', n: 20 },   hint: 'eat 20 timed persimmons in the autumn palette' },
-    ink:     { a: '#3d3b38', b: '#6e6b66', head: '#2e2c2a', unlock: { timed: 'mono', n: 20 },     hint: 'eat 20 timed plums in the mono palette' },
-    honey:   { a: '#e2b13c', b: '#f0d27a', head: '#d49f28', unlock: { stat: 'golden', n: 10 },    hint: 'find 10 golden apples, any palette' },
+    sunset:  { a: '#f2a36b', b: '#ef8f86', head: '#e08a52', unlock: { timed: 'meadow', n: 20 },   hint: 'eat 20 timed oranges in the meadow world' },
+    dragon:  { a: '#e87fa8', b: '#c86fc9', head: '#d96a97', unlock: { timed: 'sakura', n: 20 },   hint: 'eat 20 timed dragon fruit in the sakura world' },
+    retro:   { a: '#58b368', b: '#9ed36a', head: '#46a356', unlock: { timed: 'classic', n: 20 },  hint: 'eat 20 timed kiwis in the classic world' },
+    galaxy:  { a: '#5c6bc0', b: '#9575cd', head: '#4a58a8', unlock: { timed: 'midnight', n: 20 }, hint: 'eat 20 timed starfruit in the midnight world' },
+    deepsea: { a: '#26818e', b: '#4ab3a8', head: '#1f6f7b', unlock: { timed: 'tide', n: 20 },     hint: 'eat 20 timed blueberries in the tide world' },
+    ember:   { a: '#d97742', b: '#a8524a', head: '#c2632f', unlock: { timed: 'autumn', n: 20 },   hint: 'eat 20 timed persimmons in the autumn world' },
+    ink:     { a: '#3d3b38', b: '#6e6b66', head: '#2e2c2a', unlock: { timed: 'mono', n: 20 },     hint: 'eat 20 timed plums in the mono world' },
+    honey:   { a: '#e2b13c', b: '#f0d27a', head: '#d49f28', unlock: { stat: 'golden', n: 10 },    hint: 'find 10 golden apples, any world' },
   };
   const HATS = {
     none:     { label: 'none' },
@@ -128,6 +128,7 @@
     timed: { meadow: 0, sakura: 0, classic: 0, midnight: 0, tide: 0, autumn: 0, mono: 0 },
     clutch: 0, perfect: 0, ghostWins: 0, golden: 0,
     dailyStreak: 0, dailyLast: 0, dailyPlays: 0,
+    bloomLog: '',   // one char per garden bloom, recording the world it grew in
     skins: ['drift'], hats: [], skin: 'drift', hat: 'none',
   };
   let prog = { ...PROG_DEFAULT, timed: { ...PROG_DEFAULT.timed }, skins: ['drift'], hats: [] };
@@ -143,7 +144,16 @@
   if (!prog.skins.includes('drift')) prog.skins.unshift('drift');
   if (!prog.skins.includes(prog.skin)) prog.skin = 'drift';
   if (prog.hat !== 'none' && !prog.hats.includes(prog.hat)) prog.hat = 'none';
-  const saveProg = () => localStorage.setItem('drift-progress', JSON.stringify(prog));
+  // progress saves are deferred: a synchronous localStorage write on every
+  // fruit caused frame spikes mid-run (felt as input delay)
+  let progDirty = false;
+  const saveProg = () => { progDirty = true; };
+  function flushProg() {
+    if (!progDirty) return;
+    localStorage.setItem('drift-progress', JSON.stringify(prog));
+    progDirty = false;
+  }
+  window.addEventListener('pagehide', flushProg);
 
   function unlockMet(u) {
     if (!u) return true;
@@ -168,7 +178,7 @@
         changed = true;
       }
     }
-    if (changed) { saveProg(); refreshWardrobe(); }
+    if (changed) { saveProg(); flushProg(); refreshWardrobe(); }
   }
 
   let PAL = THEMES[settings.theme] || THEMES.meadow;
@@ -226,6 +236,8 @@
   const overlays = { menu: $('menu'), ready: $('ready'), paused: $('paused'), gameover: $('gameover') };
   function showOverlay(name) {
     for (const k in overlays) overlays[k].classList.toggle('show', k === name);
+    const tip = document.querySelector('.tip');
+    if (tip) tip.classList.remove('show');
   }
 
   // ---------- toasts ----------
@@ -479,9 +491,15 @@
     startRun(dailySeed(daily.n));
   }
 
+  const WORLD_CODE = { meadow: 'm', sakura: 's', classic: 'c', midnight: 'n', tide: 't', autumn: 'a', mono: 'o' };
+  function countFruit() {
+    prog.fruitTotal++;
+    if (prog.fruitTotal % 10 === 0) prog.bloomLog = (prog.bloomLog || '') + (WORLD_CODE[settings.theme] || 'm');
+  }
+
   function onTimedCatch(pts) {
     prog.timed[settings.theme] = (prog.timed[settings.theme] || 0) + 1;
-    prog.fruitTotal++;
+    countFruit();
     runStats.fruit++;
     runStats.timed++;
     if (pts >= 5) prog.perfect++;
@@ -497,7 +515,7 @@
     recMoves.push(DIRS.findIndex(d => d.x === player.dir.x && d.y === player.dir.y));
 
     if (ev.ate) {
-      prog.fruitTotal++;
+      countFruit();
       runStats.fruit++;
       if (ev.ate.golden) {
         prog.golden++;
@@ -543,6 +561,7 @@
     endCause = cause;
     state = 'dying';
     dieAt = performance.now();
+    flushProg();
     if (cause === 'death') Sound.die(); else Sound.timeUp();
 
     const prevBest = getBest();
@@ -646,7 +665,7 @@
     }
     if (k === ' ' || k === 'Escape') {
       e.preventDefault();
-      if (state === 'playing') { state = 'paused'; Sound.pause(); showOverlay('paused'); }
+      if (state === 'playing') { state = 'paused'; flushProg(); Sound.pause(); showOverlay('paused'); }
       else if (state === 'paused') { state = 'playing'; lastTime = 0; showOverlay(null); }
     }
     if (k === 'h') document.body.classList.toggle('cinema');
@@ -697,13 +716,56 @@
       saveSettings();
       sync();
       Sound.ui();
-      if (g === 'theme') applyTheme();
+      if (g === 'theme') {
+        applyTheme();
+        resetAmbient();   // no leftover fish in the autumn woods
+      }
       if (g === 'rain') Sound.setRain(settings.rain === 'on');
       configureBoard();
       updateScoreUI();
+      drawWardrobePreview();
     });
     sync();
   });
+
+  // try-on preview: the snake in the style tab wears whatever you hover,
+  // locked or not, so you can see a hat before earning it
+  let lastPreview = '';
+  function drawWardrobePreview(skinKey, hatKey) {
+    const cv = $('wardrobePreview');
+    if (!cv) return;
+    const skinName = skinKey || prog.skin;
+    const hatName = hatKey !== undefined ? hatKey : prog.hat;
+    const key = skinName + '|' + hatName + '|' + settings.theme;
+    if (key === lastPreview) return;
+    lastPreview = key;
+    const sk = SKINS[skinName] || SKINS.drift;
+    const dpr = window.devicePixelRatio || 1;
+    const w = 150, h = 78, s = 54;
+    cv.style.width = w + 'px';
+    cv.style.height = h + 'px';
+    cv.width = Math.round(w * dpr);
+    cv.height = Math.round(h * dpr);
+    const g = cv.getContext('2d');
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const grad = g.createLinearGradient(w * 0.65, 0, 0, 0);
+    grad.addColorStop(0, sk.a);
+    grad.addColorStop(1, sk.b);
+    g.strokeStyle = grad;
+    g.lineCap = 'round';
+    g.lineWidth = s * 0.74;
+    g.beginPath();
+    g.moveTo(-12, h * 0.64);
+    g.quadraticCurveTo(w * 0.3, h * 0.64, w * 0.60, h * 0.62);
+    g.stroke();
+    const hx = w * 0.62, hy = h * 0.62;
+    g.fillStyle = sk.head;
+    g.beginPath();
+    g.arc(hx, hy, s * 0.40, 0, Math.PI * 2);
+    g.fill();
+    drawFace(g, hx, hy, 1, 0, s, false, false);
+    if (hatName && hatName !== 'none') drawHat(g, hatName, hx, hy, s);
+  }
 
   // instant tooltips: any element with data-tip shows a styled bubble on hover
   const tipEl = document.createElement('div');
@@ -721,6 +783,9 @@
     } else {
       tipEl.classList.remove('show');
     }
+    const wp = e.target.closest ? e.target.closest('[data-skin],[data-hat]') : null;
+    if (wp) drawWardrobePreview(wp.dataset.skin, wp.dataset.hat);
+    else drawWardrobePreview();
   });
 
   // wardrobe (skins & hats live in progression, not settings)
@@ -743,6 +808,7 @@
         ? `${HATS[k].label} · ${HATS[k].hint} · ${unlockProgress(HATS[k].unlock)}`
         : k === 'none' ? 'no hat' : `${HATS[k].label}${prog.hat === k ? ' · wearing' : ''}`;
     });
+    drawWardrobePreview();
   }
   $('skinPills').addEventListener('click', e => {
     const b = e.target.closest('.pill');
@@ -803,6 +869,7 @@
     daily = null;
     player = null; ghost = null;
     state = 'menu';
+    flushProg();
     configureBoard();
     updateScoreUI();
     refreshWardrobe();
@@ -1037,20 +1104,44 @@
       }
       ctx.globalAlpha = 1;
     } else if (settings.theme === 'tide') {
+      // kelp: segmented fronds that sway more toward the tip, with leaf blades
       const rng = mulberry32(77);
-      const n = Math.max(4, Math.floor(cols / 2.5));
-      ctx.strokeStyle = 'rgba(58,110,98,.35)';
-      ctx.lineWidth = Math.max(2, cell * 0.08);
-      ctx.lineCap = 'round';
+      const n = Math.max(6, Math.floor(cols / 1.6));
       const H = rows * cell;
+      ctx.lineCap = 'round';
       for (let i = 0; i < n; i++) {
-        const x = rng() * cols * cell;
-        const h = cell * (0.8 + rng() * 1.2);
-        const sway = Math.sin(now / (1100 + rng() * 500) + i * 2.1) * cell * 0.18;
+        const x0 = rng() * cols * cell;
+        const segs = 3 + Math.floor(rng() * 2);
+        const segH = cell * (0.55 + rng() * 0.35);
+        const hue = rng();
+        const phase = rng() * 6.28;
+        const speed = 1000 + rng() * 600;
+        ctx.strokeStyle = hue < 0.5 ? 'rgba(58,110,98,.42)' : 'rgba(74,130,108,.38)';
+        ctx.fillStyle = ctx.strokeStyle;
+        ctx.lineWidth = Math.max(2, cell * 0.09);
+        let x = x0, y = H;
         ctx.beginPath();
-        ctx.moveTo(x, H);
-        ctx.quadraticCurveTo(x + sway * 0.4, H - h * 0.6, x + sway, H - h);
+        ctx.moveTo(x, y);
+        for (let sgi = 1; sgi <= segs; sgi++) {
+          const sway = Math.sin(now / speed + phase + sgi * 0.8) * cell * 0.12 * sgi;
+          const nx = x0 + sway, ny = H - segH * sgi;
+          ctx.quadraticCurveTo(x + sway * 0.3, (y + ny) / 2, nx, ny);
+          x = nx; y = ny;
+        }
         ctx.stroke();
+        // blades alternating up the frond
+        for (let sgi = 1; sgi <= segs; sgi++) {
+          const sway = Math.sin(now / speed + phase + sgi * 0.8) * cell * 0.12 * sgi;
+          const bx = x0 + sway, by = H - segH * sgi + segH * 0.3;
+          const side = sgi % 2 ? 1 : -1;
+          ctx.save();
+          ctx.translate(bx, by);
+          ctx.rotate(side * (0.9 + Math.sin(now / speed + phase + sgi) * 0.15));
+          ctx.beginPath();
+          ctx.ellipse(side * cell * 0.14, 0, cell * 0.16, cell * 0.055, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
       }
     }
   }
@@ -1288,8 +1379,58 @@
     ctx.stroke();
   }
 
-  function drawHat(kind, hx, hy) {
-    const s = cell;
+  // the face, drawn into any context at any scale (board + wardrobe preview)
+  function drawFace(g, hx, hy, fx, fy, s, dead, blink) {
+    const px = -fy, py = fx;
+    // blush cheeks, slightly behind the eyes
+    if (!dead) {
+      g.fillStyle = 'rgba(240,130,130,.30)';
+      for (const side of [-1, 1]) {
+        g.beginPath();
+        g.arc(hx - fx * s * 0.06 + px * s * 0.27 * side, hy - fy * s * 0.06 + py * s * 0.27 * side, s * 0.075, 0, Math.PI * 2);
+        g.fill();
+      }
+    }
+    const eo = s * 0.165, ef = s * 0.10, er = s * 0.13;
+    for (const side of [-1, 1]) {
+      const ex = hx + fx * ef + px * eo * side;
+      const ey = hy + fy * ef + py * eo * side;
+      g.fillStyle = PAL.eyeW;
+      g.beginPath();
+      g.arc(ex, ey, er, 0, Math.PI * 2);
+      g.fill();
+      if (dead) {
+        g.strokeStyle = PAL.eyeP;
+        g.lineWidth = Math.max(1.2, s * 0.035);
+        const k = er * 0.5;
+        g.beginPath();
+        g.moveTo(ex - k, ey - k); g.lineTo(ex + k, ey + k);
+        g.moveTo(ex + k, ey - k); g.lineTo(ex - k, ey + k);
+        g.stroke();
+      } else if (blink) {
+        g.strokeStyle = PAL.eyeP;
+        g.lineWidth = Math.max(1.2, s * 0.04);
+        g.beginPath();
+        g.moveTo(ex - er * 0.6, ey);
+        g.lineTo(ex + er * 0.6, ey);
+        g.stroke();
+      } else {
+        const pr = er * 0.55;
+        const cx = ex + fx * er * 0.32, cy = ey + fy * er * 0.32;
+        g.fillStyle = PAL.eyeP;
+        g.beginPath();
+        g.arc(cx, cy, pr, 0, Math.PI * 2);
+        g.fill();
+        g.fillStyle = 'rgba(255,255,255,.9)';
+        g.beginPath();
+        g.arc(cx - pr * 0.35, cy - pr * 0.35, pr * 0.32, 0, Math.PI * 2);
+        g.fill();
+      }
+    }
+  }
+
+  function drawHat(g, kind, hx, hy, s) {
+    const ctx = g;
     ctx.save();
     ctx.lineCap = 'round';
     if (kind === 'sprout') {
@@ -1529,48 +1670,18 @@
     }
 
     const blink = !dead && ((now + 1300) % 4100) < 120;
-    const eo = cell * 0.17, ef = cell * 0.10, er = cell * 0.115;
-    for (const s of [-1, 1]) {
-      const ex = head.x + fx * ef + px * eo * s;
-      const ey = head.y + fy * ef + py * eo * s;
-      ctx.fillStyle = PAL.eyeW;
-      ctx.beginPath();
-      ctx.arc(ex, ey, er, 0, Math.PI * 2);
-      ctx.fill();
-      if (dead) {
-        ctx.strokeStyle = PAL.eyeP;
-        ctx.lineWidth = Math.max(1.2, cell * 0.035);
-        const k = er * 0.5;
-        ctx.beginPath();
-        ctx.moveTo(ex - k, ey - k); ctx.lineTo(ex + k, ey + k);
-        ctx.moveTo(ex + k, ey - k); ctx.lineTo(ex - k, ey + k);
-        ctx.stroke();
-      } else if (blink) {
-        ctx.strokeStyle = PAL.eyeP;
-        ctx.lineWidth = Math.max(1.2, cell * 0.04);
-        ctx.beginPath();
-        ctx.moveTo(ex - er * 0.6, ey);
-        ctx.lineTo(ex + er * 0.6, ey);
-        ctx.stroke();
-      } else {
-        ctx.fillStyle = PAL.eyeP;
-        ctx.beginPath();
-        ctx.arc(ex + fx * er * 0.35, ey + fy * er * 0.35, er * 0.52, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
-    if (!dead && prog.hat !== 'none') drawHat(prog.hat, head.x, head.y);
+    drawFace(ctx, head.x, head.y, fx, fy, cell, dead, blink);
+    if (!dead && prog.hat !== 'none') drawHat(ctx, prog.hat, head.x, head.y, cell);
   }
 
   // ---------- ambient particles ----------
-  const AMB_RATE = { meadow: 1400, sakura: 950, midnight: 1500, tide: 1000, autumn: 1200, mono: 2200 };
+  const AMB_RATE = { meadow: 1000, sakura: 650, midnight: 1000, tide: 600, autumn: 850, mono: 1500 };
   function spawnAmbient(now) {
     const W = cols * cell, H = rows * cell;
     const theme = settings.theme;
     if (theme === 'meadow') {
       const flies = ambient.filter(a => a.kind === 'butterfly').length;
-      if (flies < 3 && Math.random() < 0.35) {
+      if (flies < 4 && Math.random() < 0.35) {
         ambient.push({
           kind: 'butterfly', x: Math.random() < 0.5 ? -cell * 0.4 : W + cell * 0.4,
           y: H * (0.15 + Math.random() * 0.7), phase: Math.random() * 6.28, born: now,
@@ -1578,11 +1689,11 @@
         });
         return;
       }
-      if (ambient.length >= 12) return;
+      if (ambient.length >= 16) return;
       ambient.push({ kind: 'leaf', x: Math.random() * W, y: -cell * 0.4, phase: Math.random() * 6.28 });
     } else if (theme === 'sakura') {
-      if (ambient.length >= 16) return;
-      const flurry = Math.random() < 0.18 ? 5 + Math.floor(Math.random() * 4) : 1;
+      if (ambient.length >= 24) return;
+      const flurry = Math.random() < 0.22 ? 5 + Math.floor(Math.random() * 4) : 1;
       for (let i = 0; i < flurry; i++) {
         ambient.push({
           kind: 'petal', x: Math.random() * W,
@@ -1590,14 +1701,14 @@
         });
       }
     } else if (theme === 'autumn') {
-      if (ambient.length >= 12) return;
+      if (ambient.length >= 16) return;
       const color = ['#d98a4a', '#c2632f', '#b8923f'][Math.floor(Math.random() * 3)];
       ambient.push({ kind: 'leaf', color, x: Math.random() * W, y: -cell * 0.4, phase: Math.random() * 6.28 });
     } else if (theme === 'mono') {
-      if (ambient.length >= 14) return;
+      if (ambient.length >= 20) return;
       ambient.push({ kind: 'dust', x: Math.random() * W, y: -cell * 0.2, phase: Math.random() * 6.28 });
     } else if (theme === 'midnight') {
-      if (ambient.filter(a => a.kind === 'firefly').length >= 7) return;
+      if (ambient.filter(a => a.kind === 'firefly').length >= 10) return;
       ambient.push({
         kind: 'firefly', x: Math.random() * W, y: Math.random() * H,
         phase: Math.random() * 6.28, born: now,
@@ -1605,7 +1716,7 @@
       });
     } else if (theme === 'tide') {
       const fish = ambient.filter(a => a.kind === 'fish').length;
-      if (fish < 4 && Math.random() < 0.3) {
+      if (fish < 7 && Math.random() < 0.4) {
         const dir = Math.random() < 0.5 ? 1 : -1;
         ambient.push({
           kind: 'fish', dir,
@@ -1617,8 +1728,21 @@
         });
         return;
       }
-      if (ambient.length >= 12) return;
+      if (ambient.length >= 22) return;
       ambient.push({ kind: 'bubble', x: Math.random() * W, y: H + cell * 0.3, phase: Math.random() * 6.28, r: cell * (0.05 + Math.random() * 0.08) });
+    }
+  }
+
+  // a world switch starts its scene fresh and already alive
+  function resetAmbient(now) {
+    ambient = [];
+    ambTimer = 0;
+    const H = rows * cell, W = cols * cell;
+    for (let i = 0; i < 10; i++) spawnAmbient(now || performance.now());
+    for (const a of ambient) {
+      if (a.kind === 'leaf' || a.kind === 'petal' || a.kind === 'dust') a.y = Math.random() * H;
+      if (a.kind === 'bubble') a.y = Math.random() * H;
+      if (a.kind === 'fish') a.x = Math.random() * W;
     }
   }
 
@@ -1760,15 +1884,31 @@
 
   // ---------- garden ----------
   const FLOWER_COLORS = ['#ef9486', '#e8aec4', '#f2b76d', '#b3a7e6', '#8fa3e0', '#f3b8cb'];
+  // each world grows its own flowers
+  const WORLD_FLOWERS = {
+    m: ['#ef9486', '#f2b76d', '#b3a7e6', '#8fa3e0'],
+    s: ['#f3b8cb', '#e8aec4', '#f7d4e0'],
+    c: ['#e7471d', '#ffd23f', '#3faa49'],
+    n: ['#9fa8da', '#cdd3ec', '#b39ddb'],
+    t: ['#5fa8a0', '#8ec3b0', '#7986cb'],
+    a: ['#d98a4a', '#c2632f', '#e9c46a'],
+    o: ['#cfccc6', '#9a978f', '#f4f2ed'],
+  };
+  let lastGarden = '';
   function drawGarden() {
     const wrap = $('gardenWrap');
     if (!wrap) return;
     const blooms = Math.floor(prog.fruitTotal / 10);
+    const w = cols * cell, h = 40;
+    // redraw only when a bloom is added or the board resizes — a full canvas
+    // redraw on every fruit caused frame spikes mid-run
+    const sig = blooms + ':' + w;
+    if (sig === lastGarden) return;
+    lastGarden = sig;
     wrap.classList.toggle('hidden', blooms === 0);
     if (!blooms) return;
     const g = $('garden');
     const gx = g.getContext('2d');
-    const w = cols * cell, h = 40;
     const dpr = window.devicePixelRatio || 1;
     g.style.width = w + 'px';
     g.style.height = h + 'px';
@@ -1789,11 +1929,14 @@
     }
     const fw = 24;
     const n = Math.min(blooms, Math.floor((w - 16) / fw));
+    const log = prog.bloomLog || '';
+    const legacy = blooms - log.length;   // blooms earned before worlds were recorded
     for (let i = 0; i < n; i++) {
       const r = mulberry32(1000 + i * 7919);
       const x = 12 + i * fw + r() * 8;
       const stemH = 13 + r() * 12;
-      const color = FLOWER_COLORS[Math.floor(r() * FLOWER_COLORS.length)];
+      const set = i >= legacy ? (WORLD_FLOWERS[log[i - legacy]] || FLOWER_COLORS) : FLOWER_COLORS;
+      const color = set[Math.floor(r() * set.length)];
       gx.strokeStyle = '#7da379';
       gx.lineWidth = 1.6;
       gx.beginPath();
@@ -1824,8 +1967,10 @@
 
     if (state === 'playing') {
       acc += dt;
-      while (acc >= stepMs && state === 'playing') {
-        acc -= stepMs;
+      // at most one tick per frame: after a frame hiccup the snake must never
+      // travel two squares before the player sees one (excess time is dropped)
+      if (acc >= stepMs) {
+        acc = Math.min(acc - stepMs, stepMs * 0.9);
         tick(now);
       }
     }
