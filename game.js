@@ -234,6 +234,7 @@
   let state = 'menu';         // menu | ready | playing | paused | dying | gameover
   let endCause = 'death';     // death | time
   let dirQueue = [];
+  let lastTickSnap = null;
   let acc = 0, lastTime = 0, dieAt = 0;
   let particles = [], popups = [], eatRipple = null;
   let ambient = [], ambTimer = 0;
@@ -277,9 +278,28 @@
       return ((t ^ t >>> 14) >>> 0) / 4294967296;
     };
   }
+  // same generator with the state held on the sim, so a sim can be snapshotted
+  // and rewound (late-turn forgiveness) without breaking determinism
+  function rnd(sim) {
+    sim.rngState |= 0;
+    sim.rngState = sim.rngState + 0x6D2B79F5 | 0;
+    const a = sim.rngState;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  }
+  const cloneSim = s => ({
+    rngState: s.rngState,
+    snake: s.snake.map(c => ({ x: c.x, y: c.y })),
+    dir: { ...s.dir },
+    prevTail: s.prevTail ? { ...s.prevTail } : null,
+    fruits: s.fruits.map(f => ({ ...f })),
+    bonus: s.bonus ? { ...s.bonus } : null,
+    bonusIn: s.bonusIn, score: s.score, alive: s.alive, ticks: s.ticks,
+  });
   const randomSeed = () => (Math.random() * 4294967296) >>> 0;
   const seedStr = s => s.toString(36);
-  const gapRoll = rng => BONUS_GAP_MIN + Math.floor(rng() * BONUS_GAP_SPAN);
+  const gapRoll = sim => BONUS_GAP_MIN + Math.floor(rnd(sim) * BONUS_GAP_SPAN);
 
   function freeCell(sim) {
     const taken = new Set(sim.snake.map(c => c.x + ',' + c.y));
@@ -290,7 +310,7 @@
       for (let x = 0; x < cols; x++)
         if (!taken.has(x + ',' + y)) free.push({ x, y });
     if (!free.length) return null;
-    return free[Math.floor(sim.rng() * free.length)];
+    return free[Math.floor(rnd(sim) * free.length)];
   }
 
   function newFruit(sim) {
@@ -298,13 +318,13 @@
     if (!c) return null;
     if (settings.mode === 'rush') return { x: c.x, y: c.y, ticksLeft: ttlTicks };
     const f = { x: c.x, y: c.y };
-    if (sim.rng() < 0.04) f.golden = true;   // rare golden apple, worth 3
+    if (rnd(sim) < 0.04) f.golden = true;   // rare golden apple, worth 3
     return f;
   }
 
   function makeSim(seed) {
     const sim = {
-      rng: mulberry32(seed),
+      rngState: seed | 0,
       snake: [], dir: { x: 1, y: 0 }, prevTail: null,
       fruits: [], bonus: null, bonusIn: 0,
       score: 0, alive: true, ticks: 0,
@@ -316,7 +336,7 @@
       const f = newFruit(sim);
       if (f) sim.fruits.push(f);
     }
-    sim.bonusIn = gapRoll(sim.rng);
+    sim.bonusIn = gapRoll(sim);
     return sim;
   }
 
@@ -376,7 +396,7 @@
             sim.bonus = { x: b.x, y: b.y, ticksLeft: ttlTicks };
             ev.bonusSpawned = true;
           }
-          sim.bonusIn = gapRoll(sim.rng);
+          sim.bonusIn = gapRoll(sim);
         }
       }
     }
@@ -490,6 +510,7 @@
     }
     particles = []; popups = []; eatRipple = null; lastBonusSecs = null;
     runStats = { fruit: 0, timed: 0, golden: 0 };
+    lastTickSnap = null;
     acc = 0;
     endCause = 'death';
     state = 'ready';
@@ -523,10 +544,31 @@
   }
 
   function tick(now) {
+    // snapshot before stepping so a just-missed turn can be applied
+    // retroactively (late-turn forgiveness)
+    lastTickSnap = {
+      player: cloneSim(player),
+      ghost: ghost && ghost.sim.alive && ghost.idx < ghost.moves.length
+        ? { sim: cloneSim(ghost.sim), idx: ghost.idx } : null,
+      clean: true,
+    };
     const ndir = dirQueue.length ? dirQueue.shift() : null;
     const ev = simStep(player, ndir);
     recMoves.push(DIRS.findIndex(d => d.x === player.dir.x && d.y === player.dir.y));
+    if (ev.ate || ev.bonus || ev.bonusSpawned || ev.bonusExpired || ev.expired || ev.died || ev.timeUp) {
+      lastTickSnap.clean = false;
+    }
+    applyTickEvents(ev, now);
+    if (ev.died) return endRun('death');
+    if (ev.timeUp) return endRun('time');
 
+    if (ghost && ghost.sim.alive && ghost.idx < ghost.moves.length) {
+      simStep(ghost.sim, DIRS[+ghost.moves[ghost.idx++]]);
+      if (!ghost.sim.alive || ghost.idx >= ghost.moves.length) ghost.diedAt = now;
+    }
+  }
+
+  function applyTickEvents(ev, now) {
     if (ev.ate) {
       countFruit();
       runStats.fruit++;
@@ -561,13 +603,33 @@
       popups.push({ x: (ev.bonus.x + 0.5) * cell, y: ev.bonus.y * cell, text: '+' + ev.bonus.pts, t0: now });
       onTimedCatch(ev.bonus.pts);
     }
-    if (ev.died) return endRun('death');
-    if (ev.timeUp) return endRun('time');
+  }
 
-    if (ghost && ghost.sim.alive && ghost.idx < ghost.moves.length) {
-      simStep(ghost.sim, DIRS[+ghost.moves[ghost.idx++]]);
-      if (!ghost.sim.alive || ghost.idx >= ghost.moves.length) ghost.diedAt = now;
+  // a turn pressed just after a tick still applies to the cell the snake is
+  // visually in, as long as the missed tick was eventless and the retro move
+  // doesn't kill the player
+  function tryRetroTurn(d, now) {
+    if (!lastTickSnap || !lastTickSnap.clean) return;
+    if (acc >= stepMs * 0.45) return;
+    const pd = lastTickSnap.player.dir;
+    if ((d.x === -pd.x && d.y === -pd.y) || (d.x === player.dir.x && d.y === player.dir.y)) return;
+    const trial = cloneSim(lastTickSnap.player);
+    const ev = simStep(trial, d);
+    if (ev.died) return;
+    player = trial;
+    recMoves[recMoves.length - 1] = DIRS.findIndex(x => x.x === player.dir.x && x.y === player.dir.y);
+    if (lastTickSnap.ghost && ghost) {
+      ghost.sim = lastTickSnap.ghost.sim;
+      ghost.idx = lastTickSnap.ghost.idx;
+      if (ghost.sim.alive && ghost.idx < ghost.moves.length) {
+        simStep(ghost.sim, DIRS[+ghost.moves[ghost.idx++]]);
+        if (!ghost.sim.alive || ghost.idx >= ghost.moves.length) ghost.diedAt = now;
+      }
     }
+    dirQueue.length = 0;
+    lastTickSnap = null;
+    applyTickEvents(ev, now);
+    if (ev.timeUp) endRun('time');
   }
 
   function endRun(cause) {
@@ -667,6 +729,12 @@
     showOverlay(null);
   }
 
+  function steer(d) {
+    const hadQueue = dirQueue.length > 0;
+    queueDir(d);
+    if (!hadQueue && dirQueue.length === 1) tryRetroTurn(dirQueue[0], performance.now());
+  }
+
   document.addEventListener('keydown', e => {
     const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
     if (state === 'garden') {
@@ -681,7 +749,7 @@
     if (d) {
       e.preventDefault();
       if (state === 'ready') tryStart(d);
-      else if (state === 'playing') queueDir(d);
+      else if (state === 'playing') steer(d);
       return;
     }
     if (k === ' ' || k === 'Escape') {
@@ -708,7 +776,7 @@
     touchStart = null;
     touchMoved = true;
     if (state === 'ready') tryStart(d);
-    else if (state === 'playing') queueDir(d);
+    else if (state === 'playing') steer(d);
   }, { passive: true });
   stage.addEventListener('touchend', e => {
     // a tap (no swipe) on the bare board pauses
