@@ -115,7 +115,7 @@
   // ---------- settings ----------
   const DEFAULTS = {
     mode: 'classic', pace: 'normal', size: 'normal', layout: 'wide',
-    theme: 'meadow', fruits: 'single', ambience: 'on', musicMode: 'generated',
+    theme: 'meadow', fruits: 'single', ambience: 'on', musicMode: 'artists',
     sfxVol: 0.8, musicVol: 0.5,
   };
   let settings = { ...DEFAULTS };
@@ -2408,43 +2408,83 @@
 
   function drawSleepingSnake(now, cx, cy, inkColor) {
     const skin = SKINS[prog.skin] || SKINS.drift;
-    const breathe = 1 + Math.sin(now / 1900) * 0.035;
-    const U = cell * 1.35;
-    const BW = U * 0.55;
-    const pts = [];
-    for (let t = 0; t <= 4.6; t += 0.15) {
-      const r = U * (0.25 + t * 0.21) * breathe;
-      pts.push({ x: cx + Math.cos(t + 2.4) * r, y: cy + Math.sin(t + 2.4) * r * 0.62 });
-    }
+    const breathe = 1 + Math.sin(now / 1900) * 0.03;
+    const R = cell * 1.5;
+    const BW = cell * 0.58;
+    ctx.save();
+    // breathe by scaling about the coil's base so it stays grounded
+    const baseY = cy + R * 0.45;
+    ctx.translate(cx, baseY);
+    ctx.scale(breathe, breathe);
+    ctx.translate(-cx, -baseY);
+
+    // pressed grass and a tight shadow hugging the coil
+    ctx.fillStyle = 'rgba(70,110,60,.18)';
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + R * 0.40, R * 1.4, R * 0.58, 0, 0, Math.PI * 2);
+    ctx.fill();
     ctx.fillStyle = 'rgba(0,0,0,.10)';
     ctx.beginPath();
-    ctx.ellipse(cx, cy + U * 0.85, U * 1.7, U * 0.55, 0, 0, Math.PI * 2);
+    ctx.ellipse(cx, cy + R * 0.44, R * 1.15, R * 0.42, 0, 0, Math.PI * 2);
     ctx.fill();
-    const grad = ctx.createLinearGradient(cx - U * 1.4, cy, cx + U * 1.6, cy);
+
+    const grad = ctx.createLinearGradient(cx - R, cy, cx + R, cy);
     grad.addColorStop(0, skin.b);
     grad.addColorStop(1, skin.a);
-    ctx.strokeStyle = grad;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    for (let i = 0; i < pts.length - 1; i++) {
-      ctx.lineWidth = BW * Math.min(1, 0.35 + (i / pts.length) * 0.95);
+
+    // tail tip resting on the ground, poking out from under the bottom loop
+    ctx.fillStyle = grad;
+    for (let i = 0; i <= 8; i++) {
+      const t = i / 8;
       ctx.beginPath();
-      ctx.moveTo(pts[i].x, pts[i].y);
-      ctx.lineTo(pts[i + 1].x, pts[i + 1].y);
+      ctx.arc(cx + R * (0.75 + t * 0.55), cy + R * (0.40 + t * 0.05),
+        (BW / 2) * (0.58 - t * 0.42), 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // stacked loops, bottom to top, with clear seams between them
+    const loops = [
+      { rx: R, ry: R * 0.42, oy: 0 },
+      { rx: R * 0.76, ry: R * 0.34, oy: -R * 0.42 },
+      { rx: R * 0.48, ry: R * 0.26, oy: -R * 0.76 },
+    ];
+    for (let li = 0; li < loops.length; li++) {
+      const L = loops[li];
+      if (li > 0) {
+        ctx.strokeStyle = 'rgba(0,0,0,.14)';
+        ctx.lineWidth = BW * 1.18;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + L.oy + BW * 0.20, L.rx, L.ry, 0, Math.PI * 0.1, Math.PI * 0.9);
+        ctx.stroke();
+      }
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = BW;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy + L.oy, L.rx, L.ry, 0, 0, Math.PI * 2);
       ctx.stroke();
     }
-    // head rises and falls gently with the breath
-    const hp = pts[pts.length - 1];
-    const hy = hp.y + Math.sin(now / 1900) * cell * 0.06;
+
+    // neck curling from the top loop to the head resting on it
+    const top = loops[2];
+    const hx = cx + top.rx * 0.7;
+    const hy = cy + top.oy - top.ry * 1.1;
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = BW;
+    ctx.beginPath();
+    ctx.moveTo(cx - top.rx * 0.5, cy + top.oy - top.ry * 0.6);
+    ctx.quadraticCurveTo(cx, cy + top.oy - top.ry * 1.6, hx, hy);
+    ctx.stroke();
     ctx.fillStyle = skin.head;
     ctx.beginPath();
-    ctx.arc(hp.x, hy, BW * 0.6, 0, Math.PI * 2);
+    ctx.arc(hx, hy, BW * 0.72, 0, Math.PI * 2);
     ctx.fill();
     const fs = BW * 1.45;
     ctx.fillStyle = 'rgba(240,130,130,.30)';
     for (const side of [-1, 1]) {
       ctx.beginPath();
-      ctx.arc(hp.x - fs * 0.06, hy + fs * 0.27 * side, fs * 0.075, 0, Math.PI * 2);
+      ctx.arc(hx - fs * 0.06, hy + fs * 0.27 * side, fs * 0.075, 0, Math.PI * 2);
       ctx.fill();
     }
     // peacefully closed eyes: soft downward arcs
@@ -2452,22 +2492,23 @@
     ctx.lineWidth = Math.max(1.6, fs * 0.045);
     ctx.lineCap = 'round';
     for (const side of [-1, 1]) {
-      const ex = hp.x + fs * 0.10;
+      const ex = hx + fs * 0.10;
       const ey = hy + fs * 0.165 * side;
       ctx.beginPath();
       ctx.arc(ex, ey - fs * 0.05, fs * 0.11, Math.PI * 0.15, Math.PI * 0.85);
       ctx.stroke();
     }
-    if (prog.hat !== 'none') drawHat(ctx, prog.hat, hp.x, hy, fs);
+    if (prog.hat !== 'none') drawHat(ctx, prog.hat, hx, hy, fs);
     ctx.textAlign = 'center';
     for (let k = 0; k < 3; k++) {
       const ph = ((now / 1400) + k * 0.33) % 1;
       ctx.globalAlpha = Math.max(0, (1 - ph) * 0.75);
       ctx.fillStyle = inkColor;
       ctx.font = `700 ${Math.round(cell * (0.26 + k * 0.07 + ph * 0.14))}px Quicksand, sans-serif`;
-      ctx.fillText('z', hp.x + cell * (0.7 + ph * 0.6 + k * 0.25), hy - cell * (0.55 + ph * 0.9 + k * 0.3));
+      ctx.fillText('z', hx + cell * (0.6 + ph * 0.6 + k * 0.25), hy - cell * (0.55 + ph * 0.9 + k * 0.3));
     }
     ctx.globalAlpha = 1;
+    ctx.restore();
   }
 
   // the garden takes after whichever world you have grown the most flowers in
