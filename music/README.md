@@ -42,4 +42,8 @@ Tracks sourced via [chosic.com](https://www.chosic.com/free-music/lofi/).
 2. Drop the audio file in this folder.
 3. Add an entry to `tracks.js` (title, artist, link, license, worlds) and
    bump the `tracks.js?v=` number in index.html.
-4. Add a row to this table.
+4. Resolve streaming links for the now-playing card's platform buttons:
+   `python tools/resolve_links.py tracks.js > links.json` then
+   `python tools/apply_links.py links.json tracks.js`. Tracks that aren't
+   on streaming simply don't get buttons.
+5. Add a row to this table.

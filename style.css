@@ -303,6 +303,9 @@ canvas {
 }
 .now-playing:hover { transform: translateY(-2px); }
 .now-playing .np-note { color: var(--snake-a); font-size: 14px; }
+.now-playing a { color: inherit; text-decoration: none; display: flex; align-items: center; gap: 8px; }
+.np-svc { line-height: 0; opacity: .75; transition: opacity .15s ease, transform .15s ease; }
+.np-svc:hover { opacity: 1; transform: scale(1.15); }
 body.cinema .now-playing { opacity: 0; visibility: hidden; }
 
 #gardenBack {
