@@ -232,6 +232,7 @@ canvas {
 .bar-fill { height: 100%; background: linear-gradient(90deg, var(--snake-a), var(--snake-b)); border-radius: 999px; }
 .bar-num { font-size: 11px; color: var(--ink-soft); min-width: 44px; text-align: right; }
 .check { color: var(--snake-a); margin-left: auto; }
+.save-hint { font-size: 11px; color: var(--ink-soft); max-width: 280px; margin: -2px auto 2px; line-height: 1.4; }
 
 /* one label style everywhere — option rows, sliders, stats sections */
 .label {

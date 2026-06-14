@@ -1461,6 +1461,43 @@
     return c.toDataURL('image/png');
   }
 
+  // ---------- carrying your save between devices ----------
+  // no account, no server: the whole save packs into a link you open on the
+  // other device. Ghost replays (bulky, per-seed) stay behind — every unlock,
+  // the garden, lifetime stats, streak and best scores travel.
+  const saveKeys = () => {
+    const keys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('drift-') && !k.startsWith('drift-run')) keys.push(k);
+    }
+    return keys;
+  };
+  function packSave() {
+    const d = {};
+    for (const k of saveKeys()) d[k] = localStorage.getItem(k);
+    return btoa(unescape(encodeURIComponent(JSON.stringify({ v: 1, d }))));
+  }
+  const saveLink = () => location.origin + location.pathname + '#save=' + packSave();
+  // accepts a full save link or a bare code; returns the key/value map or null
+  function readSave(text) {
+    if (!text) return null;
+    let code = String(text).trim();
+    const at = code.indexOf('save=');
+    if (at >= 0) code = code.slice(at + 5);
+    code = code.replace(/[#&\s].*$/, '');
+    try {
+      const obj = JSON.parse(decodeURIComponent(escape(atob(code))));
+      if (!obj || obj.v !== 1 || !obj.d || !obj.d['drift-progress']) return null;
+      JSON.parse(obj.d['drift-progress']);   // must be real progress
+      return obj.d;
+    } catch (e) { return null; }
+  }
+  function applySave(d) {
+    for (const k in d) localStorage.setItem(k, d[k]);
+    location.replace(location.origin + location.pathname);   // drop #save, reboot clean
+  }
+
   // ---------- stats panel ----------
   function bar(cur, max) {
     const pct = Math.min(100, Math.round((cur / max) * 100));
@@ -1527,7 +1564,30 @@
       h += `<div class="stat-chip"><b>${localStorage.getItem(key) || 0}</b><span>${m}</span></div>`;
     }
     h += '</div>';
+    h += '<div class="label" style="margin-top:12px">carry your save</div>' +
+      '<p class="save-hint">move your garden to another device — no account needed</p>' +
+      '<div class="btn-row">' +
+      '<button class="ghost-btn" id="saveCopyBtn" data-tip="copy a link that carries this save — open it on your other device">copy save link</button>' +
+      '<button class="ghost-btn" id="saveLoadBtn" data-tip="paste a save link or code from another device">load a save</button>' +
+      '</div>';
     $('tab-stats').innerHTML = h;
+    const copyBtn = $('saveCopyBtn'), loadBtn = $('saveLoadBtn');
+    if (copyBtn) copyBtn.addEventListener('click', () => {
+      const link = saveLink();
+      navigator.clipboard.writeText(link)
+        .then(() => { copyBtn.textContent = 'copied ✓'; setTimeout(() => { copyBtn.textContent = 'copy save link'; }, 1600); })
+        .catch(() => { window.prompt('copy your save link:', link); });
+      Sound.ui();
+    });
+    if (loadBtn) loadBtn.addEventListener('click', () => {
+      const text = window.prompt('paste your save link or code:');
+      if (text == null) return;
+      const d = readSave(text);
+      if (!d) { toast("that save code didn't look right"); return; }
+      if (!window.confirm("load this save? it replaces this device's progress.")) return;
+      Sound.unlock();
+      applySave(d);
+    });
   }
 
   // ---------- menu tabs ----------
@@ -1575,6 +1635,19 @@
     const note = $('challengeNote');
     note.textContent = goal ? `challenge · beat ${goal}` : 'challenge loaded';
     note.classList.remove('hidden');
+  })();
+
+  // arriving from a save link on another device
+  (function importHash() {
+    if (!location.hash.startsWith('#save=')) return;
+    const clean = () => history.replaceState(null, '', location.pathname + location.search);
+    const d = readSave(location.hash);
+    if (!d) { clean(); return; }
+    // let the menu paint first, so the prompt has context behind it
+    setTimeout(() => {
+      if (window.confirm("load the save from this link? it replaces this device's progress.")) applySave(d);
+      else clean();
+    }, 400);
   })();
 
   // ---------- render helpers ----------
