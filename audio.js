@@ -9,6 +9,7 @@
 //   classic  — light chiptune: square-wave melody and bass pulses
 //   autumn   — low amber pads, wind gusts
 //   mono     — sparse felt piano under heavy vinyl crackle
+//   storm    — slow low pads with distant thunder; the rain layer lives here
 // All synthesized live in WebAudio; world switches crossfade instantly.
 const Sound = (() => {
   let ctx = null, master, sfxBus, musicBus, musicFade;
@@ -61,6 +62,12 @@ const Sound = (() => {
       style: 'piano',
       lp: 1100, crackle: 0.05, wave: 0, gap: 7.5, dur: 7.5, nature: null,
       bass: [],
+    },
+    storm: {
+      style: 'pad', padType: 'triangle', saw: false, melody: false, attack: 2.8,
+      lp: 560, crackle: 0.10, wave: 0, gap: 9.5, dur: 8.2, nature: 'thunder',
+      chords: [[41, 48, 53, 57], [38, 45, 50, 53], [43, 50, 55, 58], [36, 43, 48, 52]],
+      bass: [29, 26, 31, 24],
     },
   };
   const mood = () => MOODS[moodKey] || MOODS.meadow;
@@ -336,6 +343,27 @@ const Sound = (() => {
       src.start(at);
       src.stop(at + 4.4);
     },
+    thunder(at) {
+      // far-away rumble: noise slowed and rolled off low, swelling in and
+      // trailing out — only sometimes, so the storm stays sleepy
+      if (Math.random() < 0.55) return;
+      if (!windBuf) windBuf = noiseBuffer(3, false);
+      const src = ctx.createBufferSource();
+      src.buffer = windBuf;
+      src.playbackRate.value = 0.35 + Math.random() * 0.2;
+      const lp = ctx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.frequency.value = 110 + Math.random() * 70;
+      const g = ctx.createGain();
+      const peak = 0.06 + Math.random() * 0.04;
+      g.gain.setValueAtTime(0.0001, at);
+      g.gain.exponentialRampToValueAtTime(peak, at + 0.5 + Math.random() * 0.6);
+      g.gain.exponentialRampToValueAtTime(peak * 0.4, at + 1.8);
+      g.gain.exponentialRampToValueAtTime(0.0001, at + 3.6 + Math.random());
+      src.connect(lp).connect(g).connect(busDry);
+      src.start(at);
+      src.stop(at + 5);
+    },
   };
 
   function natureEvents(at, m) {
@@ -432,14 +460,30 @@ const Sound = (() => {
     }
   }
 
-  // ----- rain: real rain is mostly hiss — broadband noise shaped to the
-  // high-mids, with soft unpitched patter underneath (no tonal pings) -----
-  let rainTimer = null, rainBuf = null;
+  // ----- rain: a real recording looped through the rain bus.
+  // "Rain Loop" by qubodup (Iwan Gabovitch), CC BY 3.0,
+  // freesound.org/people/qubodup/sounds/212580/ — credited in music/README.
+  // The old synthesized hiss starts instantly and stays as the fallback;
+  // once the file is decoded it hands over with a slow crossfade -----
+  const RAIN_SRC = 'music/Rain Loop.mp3';
+  let rainTimer = null, rainBuf = null, rainSynth = null;
+  let rainFileBuf = null, rainFileSrc = null, rainFileGain = null, rainFileState = 'idle';
+  const RAIN_FILE_GAIN = 0.30;
+
   function startRainNode() {
     if (rainGain || !ctx) return;
     rainGain = ctx.createGain();
     rainGain.gain.value = 0.0001;
     rainGain.connect(master);
+    loadRainFile();
+    if (rainFileBuf) playRainFile();
+    else startRainSynth();
+  }
+  function startRainSynth() {
+    if (rainSynth || !ctx) return;
+    rainSynth = ctx.createGain();
+    rainSynth.gain.value = 1;
+    rainSynth.connect(rainGain);
     const hp = ctx.createBiquadFilter();
     hp.type = 'highpass';
     hp.frequency.value = 900;
@@ -449,7 +493,7 @@ const Sound = (() => {
     const bed = ctx.createGain();
     bed.gain.value = 0.034;
     loopNoise(noiseBuffer(2.5, false)).connect(hp);
-    hp.connect(lp).connect(bed).connect(rainGain);
+    hp.connect(lp).connect(bed).connect(rainSynth);
     // fast faint shimmer so the hiss doesn't sound frozen
     const lfo = ctx.createOscillator();
     lfo.frequency.value = 9;
@@ -458,6 +502,40 @@ const Sound = (() => {
     lfo.connect(lg).connect(bed.gain);
     lfo.start();
     rainBuf = noiseBuffer(0.05, false);
+  }
+  function loadRainFile() {
+    if (rainFileState !== 'idle' || !ctx) return;
+    rainFileState = 'loading';
+    fetch(RAIN_SRC)
+      .then(r => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
+      .then(b => ctx.decodeAudioData(b))
+      .then(buf => {
+        rainFileBuf = buf;
+        rainFileState = 'ready';
+        if (rainGain && rainWanted) rainHandover();
+      })
+      .catch(() => { rainFileState = 'failed'; });   // the synth carries on
+  }
+  function playRainFile() {
+    if (rainFileSrc || !rainFileBuf || !ctx) return;
+    const t = ctx.currentTime;
+    rainFileSrc = ctx.createBufferSource();
+    rainFileSrc.buffer = rainFileBuf;
+    rainFileSrc.loop = true;
+    // loop inside the decoded audio, clear of the codec padding at the edges
+    rainFileSrc.loopStart = 0.2;
+    rainFileSrc.loopEnd = rainFileBuf.duration - 0.2;
+    rainFileGain = ctx.createGain();
+    rainFileGain.gain.setValueAtTime(0.0001, t);
+    rainFileGain.gain.setTargetAtTime(RAIN_FILE_GAIN, t, 0.8);
+    rainFileSrc.connect(rainFileGain).connect(rainGain);
+    rainFileSrc.start(t, 0.2);
+  }
+  // the recording takes over from the synthesized stand-in
+  function rainHandover() {
+    playRainFile();
+    if (rainSynth) rainSynth.gain.setTargetAtTime(0.0001, ctx.currentTime, 1.2);
+    if (rainTimer) { clearInterval(rainTimer); rainTimer = null; }
   }
   function dropTick(at) {
     const src = ctx.createBufferSource();
@@ -472,7 +550,8 @@ const Sound = (() => {
     src.start(at);
   }
   function startRainDrops() {
-    if (rainTimer) return;
+    // synthetic patter only backs the synth bed, never the recording
+    if (rainTimer || rainFileSrc || !rainBuf) return;
     let nextDrop = ctx.currentTime + 0.05;
     rainTimer = setInterval(() => {
       while (nextDrop < ctx.currentTime + 0.6) {
@@ -537,7 +616,8 @@ const Sound = (() => {
       if (on) {
         ensure();
         startRainNode();
-        startRainDrops();
+        if (rainFileBuf) rainHandover();
+        else startRainDrops();
         rainGain.gain.cancelScheduledValues(ctx.currentTime);
         rainGain.gain.setTargetAtTime(1, ctx.currentTime, 0.7);
       } else {
@@ -575,6 +655,20 @@ const Sound = (() => {
         const f = 523 * Math.pow(2, [0, 4, 7, 12][i] / 12);
         blip(f, f * 1.1, 0.3, 0.09, 'triangle', ctx.currentTime + i * 0.12);
       }
+    },
+    // filling the whole board: the unlock fanfare's big sibling
+    complete() {
+      if (!ensure()) return;
+      for (let i = 0; i < 6; i++) {
+        const f = 523 * Math.pow(2, [0, 4, 7, 12, 16, 19][i] / 12);
+        blip(f, f * 1.1, 0.45, 0.10, 'triangle', ctx.currentTime + i * 0.14);
+      }
+    },
+    // a cameo slipping into the world: two soft, far-away notes
+    cameo() {
+      if (!ensure()) return;
+      blip(880, 900, 0.4, 0.04);
+      blip(1320, 1340, 0.5, 0.03, 'sine', ctx.currentTime + 0.18);
     },
     timeUp() {
       if (!ensure()) return;

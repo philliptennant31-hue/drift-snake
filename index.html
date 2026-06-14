@@ -17,7 +17,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=9">
+<link rel="stylesheet" href="style.css?v=12">
 </head>
 <body>
 
@@ -77,40 +77,37 @@
       </div>
       <button class="play-btn" id="playBtn">play</button>
       <button class="play-btn small daily" id="dailyBtn" data-tip="the same board for everyone, every day">daily</button>
-      <button class="ghost-btn" id="gardenBtn" data-tip="see every flower you've ever grown">visit the garden</button>
     </div>
 
     <div class="tab-panel hidden" id="tab-setup">
-      <div class="opts">
-        <div class="opt-row">
-          <div class="label">pace</div>
-          <div class="pills" data-group="pace">
-            <button class="pill" data-v="slow">drift</button>
-            <button class="pill" data-v="normal">stroll</button>
-            <button class="pill" data-v="fast">scurry</button>
-          </div>
+      <div class="opt-row">
+        <div class="label">pace</div>
+        <div class="pills" data-group="pace">
+          <button class="pill" data-v="slow">drift</button>
+          <button class="pill" data-v="normal">stroll</button>
+          <button class="pill" data-v="fast">scurry</button>
         </div>
-        <div class="opt-row">
-          <div class="label">board</div>
-          <div class="pills" data-group="size">
-            <button class="pill" data-v="small">snug</button>
-            <button class="pill" data-v="normal">cozy</button>
-            <button class="pill" data-v="large">roomy</button>
-          </div>
+      </div>
+      <div class="opt-row">
+        <div class="label">board</div>
+        <div class="pills" data-group="size">
+          <button class="pill" data-v="small">snug</button>
+          <button class="pill" data-v="normal">cozy</button>
+          <button class="pill" data-v="large">roomy</button>
         </div>
-        <div class="opt-row">
-          <div class="label">fruit</div>
-          <div class="pills" data-group="fruits">
-            <button class="pill" data-v="single">single</button>
-            <button class="pill" data-v="plenty">plenty</button>
-          </div>
+      </div>
+      <div class="opt-row">
+        <div class="label">fruit</div>
+        <div class="pills" data-group="fruits">
+          <button class="pill" data-v="single">single</button>
+          <button class="pill" data-v="plenty">plenty</button>
         </div>
-        <div class="opt-row">
-          <div class="label">shape</div>
-          <div class="pills" data-group="layout">
-            <button class="pill" data-v="wide">wide</button>
-            <button class="pill" data-v="tall">tall</button>
-          </div>
+      </div>
+      <div class="opt-row">
+        <div class="label">shape</div>
+        <div class="pills" data-group="layout">
+          <button class="pill" data-v="wide">wide</button>
+          <button class="pill" data-v="tall">tall</button>
         </div>
       </div>
     </div>
@@ -126,12 +123,19 @@
           <button class="pill dot" data-v="tide" data-tip="tide · under the sea" style="background:#5fa8a0"></button>
           <button class="pill dot" data-v="autumn" data-tip="autumn · maple leaves" style="background:#c97b4a"></button>
           <button class="pill dot" data-v="mono" data-tip="mono · quiet snowfall" style="background:#8a8782"></button>
+          <button class="pill dot" data-v="storm" data-tip="storm · rain and far-off thunder" style="background:#434a5a"></button>
         </div>
       </div>
       <canvas id="wardrobePreview"></canvas>
-      <div class="opt-row">
-        <div class="label">snake</div>
-        <div class="pills" id="skinPills">
+      <div class="pills wardrobe-tabs" id="wardrobeTabs">
+        <button class="pill active" data-wcat="snake">snake</button>
+        <button class="pill" data-wcat="hat">hat</button>
+        <button class="pill" data-wcat="trail">trail</button>
+        <button class="pill" data-wcat="fruit">fruit</button>
+        <button class="pill" data-wcat="munch">munch</button>
+        <button class="pill" data-wcat="eyes">eyes</button>
+      </div>
+      <div class="pills" id="skinPills">
           <button class="pill dot" data-skin="drift" style="background:linear-gradient(135deg,#8fa3e0,#b3a7e6)"></button>
           <button class="pill dot" data-skin="sunset" style="background:linear-gradient(135deg,#f2a36b,#ef8f86)"></button>
           <button class="pill dot" data-skin="dragon" style="background:linear-gradient(135deg,#e87fa8,#c86fc9)"></button>
@@ -140,22 +144,25 @@
           <button class="pill dot" data-skin="deepsea" style="background:linear-gradient(135deg,#26818e,#4ab3a8)"></button>
           <button class="pill dot" data-skin="ember" style="background:linear-gradient(135deg,#d97742,#a8524a)"></button>
           <button class="pill dot" data-skin="ink" style="background:linear-gradient(135deg,#3d3b38,#6e6b66)"></button>
+          <button class="pill dot" data-skin="tempest" style="background:linear-gradient(135deg,#6e7f9e,#9fb0c8)"></button>
           <button class="pill dot" data-skin="honey" style="background:linear-gradient(135deg,#e2b13c,#f0d27a)"></button>
-        </div>
+          <button class="pill dot" data-skin="picnic" style="background:repeating-linear-gradient(0deg,rgba(217,76,58,.5) 0 4px,transparent 4px 8px),repeating-linear-gradient(90deg,rgba(217,76,58,.5) 0 4px,transparent 4px 8px),#f7e8d8"></button>
       </div>
-      <div class="opt-row">
-        <div class="label">hat</div>
-        <div class="pills" id="hatPills">
-          <button class="pill" data-hat="none">none</button>
-          <button class="pill" data-hat="sprout">sprout</button>
-          <button class="pill" data-hat="crown">crown</button>
-          <button class="pill" data-hat="flower">flower</button>
-          <button class="pill" data-hat="chef">chef</button>
-          <button class="pill" data-hat="bow">bow</button>
-          <button class="pill" data-hat="mushroom">mushroom</button>
-          <button class="pill" data-hat="halo">halo</button>
-        </div>
+      <div class="pills hidden" id="hatPills">
+        <button class="pill" data-hat="none">none</button>
+        <button class="pill" data-hat="sprout">sprout</button>
+        <button class="pill" data-hat="crown">crown</button>
+        <button class="pill" data-hat="flower">flower</button>
+        <button class="pill" data-hat="chef">chef</button>
+        <button class="pill" data-hat="bow">bow</button>
+        <button class="pill" data-hat="mushroom">mushroom</button>
+        <button class="pill" data-hat="halo">halo</button>
+        <button class="pill" data-hat="sunhat">sun hat</button>
       </div>
+      <div class="pills hidden" id="trailPills"></div>
+      <div class="pills hidden" id="fruitPills"></div>
+      <div class="pills hidden" id="burstPills"></div>
+      <div class="pills hidden" id="eyePills"></div>
       <div class="opt-row">
         <div class="label">ambience</div>
         <div class="pills" data-group="ambience">
@@ -181,13 +188,6 @@
         <div class="slider-box">
           <div class="label">sfx</div>
           <input type="range" id="sfxVol" min="0" max="100" value="80">
-        </div>
-      </div>
-      <div class="opt-row">
-        <div class="label">rain</div>
-        <div class="pills" id="rainPills" data-tip="remembered per world — midnight starts rainy">
-          <button class="pill" data-v="off">off</button>
-          <button class="pill" data-v="on">on</button>
         </div>
       </div>
     </div>
@@ -225,7 +225,7 @@
   </div>
 </div>
 
-<div class="garden-wrap hidden" id="gardenWrap">
+<div class="garden-wrap" id="gardenWrap" data-tip="see every flower you've ever grown">
   <canvas id="garden"></canvas>
   <div class="garden-label" id="gardenLabel"></div>
 </div>
@@ -234,12 +234,20 @@
 
 <div class="toast" id="toast"></div>
 
-<a class="now-playing hidden" id="nowPlaying" target="_blank" rel="noopener">
-  <span class="np-note">♪</span><span id="npText"></span>
-</a>
+<div class="now-playing hidden" id="nowPlaying">
+  <a id="npArtist" target="_blank" rel="noopener">
+    <span class="np-note">♪</span><span id="npText"></span>
+  </a>
+  <a class="np-svc hidden" id="npSpotify" target="_blank" rel="noopener" data-tip="open in Spotify">
+    <svg width="15" height="15" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#1DB954"/><path d="M6.4 9.7c3.7-1.1 8-.7 11.1 1.2" stroke="#fff" stroke-width="1.9" stroke-linecap="round" fill="none"/><path d="M7 12.7c3-.9 6.7-.5 9.3 1" stroke="#fff" stroke-width="1.6" stroke-linecap="round" fill="none"/><path d="M7.6 15.5c2.4-.7 5.3-.4 7.4.8" stroke="#fff" stroke-width="1.4" stroke-linecap="round" fill="none"/></svg>
+  </a>
+  <a class="np-svc hidden" id="npApple" target="_blank" rel="noopener" data-tip="open in Apple Music">
+    <svg width="15" height="15" viewBox="0 0 24 24"><rect x="1" y="1" width="22" height="22" rx="5.5" fill="#fa2d48"/><path d="M16.8 6.1l-6.4 1.3c-.3.1-.5.3-.5.6v6.3a2.6 2.6 0 1 0 1.2 2.2V10l5-1v3.6a2.6 2.6 0 1 0 1.2 2.2V6.7c0-.4-.3-.7-.5-.6z" fill="#fff"/></svg>
+  </a>
+</div>
 
-<script src="audio.js?v=9"></script>
-<script src="tracks.js?v=9"></script>
-<script src="game.js?v=9"></script>
+<script src="audio.js?v=13"></script>
+<script src="tracks.js?v=11"></script>
+<script src="game.js?v=14"></script>
 </body>
 </html>
