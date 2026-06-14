@@ -57,7 +57,7 @@ body {
   box-shadow: 0 2px 8px rgba(0,0,0,.08);
 }
 .chip svg { display: block; }
-.chip .label { font-size: 11px; font-weight: 600; color: var(--ink-soft); letter-spacing: 1px; }
+.chip .label { font-weight: 600; letter-spacing: 1px; }
 .chip.hidden { display: none; }
 button.icon-btn {
   background: var(--card);
@@ -172,8 +172,8 @@ canvas {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  height: 232px;
+  gap: 10px;
+  height: 280px;
   overflow-y: auto;
   justify-content: flex-start;
   width: 100%;
@@ -212,7 +212,7 @@ canvas {
   box-shadow: 0 2px 6px rgba(0,0,0,.07);
 }
 .stat-chip b { font-size: 15px; color: var(--ink); }
-.stat-chip span { font-size: 9px; font-weight: 700; letter-spacing: 1px; color: var(--ink-soft); text-transform: uppercase; }
+.stat-chip span { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--ink-soft); text-transform: uppercase; }
 .stat-list { display: flex; flex-direction: column; gap: 4px; width: min(86%, 330px); }
 .stat-row {
   display: flex;
@@ -230,21 +230,15 @@ canvas {
 .stat-name { color: var(--ink); min-width: 64px; text-align: left; }
 .bar { flex: 1; height: 7px; background: var(--bg-deep); border-radius: 999px; overflow: hidden; }
 .bar-fill { height: 100%; background: linear-gradient(90deg, var(--snake-a), var(--snake-b)); border-radius: 999px; }
-.bar-num { font-size: 10px; color: var(--ink-soft); min-width: 44px; text-align: right; }
+.bar-num { font-size: 11px; color: var(--ink-soft); min-width: 44px; text-align: right; }
 .check { color: var(--snake-a); margin-left: auto; }
 
-.opts {
-  display: grid;
-  grid-template-columns: auto auto;
-  gap: 10px 26px;
-  justify-content: center;
-}
-.opt-row { display: flex; flex-direction: column; gap: 5px; align-items: center; }
-.opt-row.wide { grid-column: 1 / -1; }
-.opt-row .label {
-  font-size: 10px; font-weight: 700; letter-spacing: 2px;
+/* one label style everywhere — option rows, sliders, stats sections */
+.label {
+  font-size: 11px; font-weight: 700; letter-spacing: 2px;
   color: var(--ink-soft); text-transform: uppercase;
 }
+.opt-row { display: flex; flex-direction: column; gap: 5px; align-items: center; }
 .pills { display: flex; gap: 5px; align-items: center; }
 .pill {
   border: none;
@@ -280,6 +274,22 @@ canvas {
   background: var(--board-a);
   box-shadow: inset 0 2px 6px rgba(0,0,0,.06);
 }
+/* the wardrobe's own little tab row: one cosmetic category in view at a time */
+.wardrobe-tabs {
+  background: var(--card);
+  border-radius: 999px;
+  padding: 3px;
+  gap: 3px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+.wardrobe-tabs .pill {
+  background: transparent;
+  box-shadow: none;
+  font-size: 11px;
+  letter-spacing: 1px;
+  padding: 5px 11px;
+}
+.wardrobe-tabs .pill.active { background: var(--snake-a); }
 
 .now-playing {
   position: fixed;
@@ -321,10 +331,6 @@ body.cinema .now-playing { opacity: 0; visibility: hidden; }
 
 .sliders { display: flex; gap: 22px; }
 .slider-box { display: flex; flex-direction: column; gap: 4px; align-items: center; }
-.slider-box .label {
-  font-size: 10px; font-weight: 700; letter-spacing: 2px;
-  color: var(--ink-soft); text-transform: uppercase;
-}
 input[type=range] {
   width: 110px;
   accent-color: var(--snake-a);
