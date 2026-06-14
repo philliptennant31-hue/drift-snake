@@ -35,6 +35,12 @@ Curation bar: nothing faster or busier than *Heart Of The Ocean*.
 
 Tracks sourced via [chosic.com](https://www.chosic.com/free-music/lofi/).
 
+## Ambience
+
+| Sound | Used in | Author | License | Changes |
+| --- | --- | --- | --- | --- |
+| [Rain Loop](https://freesound.org/people/qubodup/sounds/212580/) | storm world rain | [Iwan Gabovitch (qubodup)](https://freesound.org/people/qubodup/) | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/) | trimmed to a 75 s loop (`tools/trim_mp3.py`) |
+
 ## Adding a track
 
 1. Confirm the license permits redistribution (CC BY / BY-SA / BY-ND / CC0,
