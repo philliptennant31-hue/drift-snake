@@ -2,7 +2,7 @@
 (() => {
 
   // ---------- constants ----------
-  const SPEEDS = { slow: 200, normal: 135, fast: 95 };          // ms per cell
+  const SPEEDS = { slow: 200, normal: 115, fast: 95 };          // ms per cell
   const SIZES = {
     wide: { small: [11, 9], normal: [17, 13], large: [21, 15] },
     tall: { small: [9, 12], normal: [11, 19], large: [13, 23] },
@@ -701,10 +701,12 @@
 
   // a turn pressed just after a tick still applies to the cell the snake is
   // visually in, as long as the missed tick was eventless and the retro move
-  // doesn't kill the player
+  // doesn't kill the player. The window is generous (most of the cell) so a
+  // press lands instantly rather than waiting for the next step — responsiveness
+  // is worth a slightly larger visual catch-up on the turn.
   function tryRetroTurn(d, now) {
     if (!lastTickSnap || !lastTickSnap.clean) return;
-    if (acc >= stepMs * 0.45) return;
+    if (acc >= stepMs * 0.6) return;
     const pd = lastTickSnap.player.dir;
     if ((d.x === -pd.x && d.y === -pd.y) || (d.x === player.dir.x && d.y === player.dir.y)) return;
     const trial = cloneSim(lastTickSnap.player);
