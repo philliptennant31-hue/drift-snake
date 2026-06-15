@@ -37,6 +37,14 @@ const TRACKS = [
     apple: 'https://music.apple.com/us/album/butterfly/1757304523?i=1757304744',
     worlds: ['meadow'],
   },
+  {
+    src: 'music/Forget-Me-Not.mp3',
+    title: 'Forget-Me-Not', artist: 'Purrple Cat',
+    link: 'https://soundcloud.com/purrplecat', license: 'CC BY-SA 3.0',
+    spotify: 'https://open.spotify.com/search/Purrple%20Cat%20Forget-Me-Not',
+    apple: 'https://music.apple.com/us/album/forget-me-not/1501106939?i=1501107216',
+    worlds: ['meadow'],
+  },
   // midnight
   {
     src: 'music/Crescent Moon.mp3',
@@ -60,6 +68,14 @@ const TRACKS = [
     link: 'https://soundcloud.com/purrplecat', license: 'CC BY-SA 3.0',
     spotify: 'https://open.spotify.com/search/Purrple%20Cat%20Field%20Of%20Fireflies',
     apple: 'https://music.apple.com/us/album/field-of-fireflies/1520764945?i=1520764956',
+    worlds: ['midnight'],
+  },
+  {
+    src: 'music/Moonlit Walk.mp3',
+    title: 'Moonlit Walk', artist: 'Purrple Cat',
+    link: 'https://soundcloud.com/purrplecat', license: 'CC BY-SA 3.0',
+    spotify: 'https://open.spotify.com/search/Purrple%20Cat%20Moonlit%20Walk',
+    apple: 'https://music.apple.com/us/album/moonlit-walk/6770626212?i=6770626555',
     worlds: ['midnight'],
   },
   // classic — deliberately retro, the one upbeat exception
@@ -104,6 +120,14 @@ const TRACKS = [
     apple: 'https://music.apple.com/us/album/spring-showers/1501106939?i=1501106943',
     worlds: ['sakura'],
   },
+  {
+    src: 'music/Earl Grey.mp3',
+    title: 'Earl Grey', artist: 'Purrple Cat',
+    link: 'https://soundcloud.com/purrplecat', license: 'CC BY-SA 3.0',
+    spotify: 'https://open.spotify.com/search/Purrple%20Cat%20Earl%20Grey',
+    apple: 'https://music.apple.com/us/album/earl-grey/1757304523?i=1757304741',
+    worlds: ['sakura'],
+  },
   // tide — the benchmark
   {
     src: 'music/Heart Of The Ocean.mp3',
@@ -129,6 +153,14 @@ const TRACKS = [
     apple: 'https://music.apple.com/us/album/where-the-waves-take-us/6770656368?i=6770656371',
     worlds: ['tide'],
   },
+  {
+    src: 'music/Glowing Tides.mp3',
+    title: 'Glowing Tides', artist: 'Purrple Cat',
+    link: 'https://soundcloud.com/purrplecat', license: 'CC BY-SA 3.0',
+    spotify: 'https://open.spotify.com/search/Purrple%20Cat%20Glowing%20Tides',
+    apple: 'https://music.apple.com/us/album/glowing-tides/1708521606?i=1708521612',
+    worlds: ['tide'],
+  },
   // autumn
   {
     src: 'music/Golden Hour.mp3',
@@ -152,6 +184,14 @@ const TRACKS = [
     link: 'https://soundcloud.com/purrplecat', license: 'CC BY-SA 3.0',
     spotify: 'https://open.spotify.com/search/Purrple%20Cat%20Equinox',
     apple: 'https://music.apple.com/us/album/equinox/1501106939?i=1501106945',
+    worlds: ['autumn'],
+  },
+  {
+    src: 'music/In The Past.mp3',
+    title: 'In The Past', artist: 'Purrple Cat',
+    link: 'https://soundcloud.com/purrplecat', license: 'CC BY-SA 3.0',
+    spotify: 'https://open.spotify.com/search/Purrple%20Cat%20In%20The%20Past',
+    apple: 'https://music.apple.com/us/album/in-the-past/1636947085?i=1636947089',
     worlds: ['autumn'],
   },
   // mono
