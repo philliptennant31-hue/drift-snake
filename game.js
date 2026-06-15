@@ -701,12 +701,14 @@
 
   // a turn pressed just after a tick still applies to the cell the snake is
   // visually in, as long as the missed tick was eventless and the retro move
-  // doesn't kill the player. The window is generous (most of the cell) so a
-  // press lands instantly rather than waiting for the next step — responsiveness
-  // is worth a slightly larger visual catch-up on the turn.
+  // doesn't kill the player. Kept to a SMALL slice of the cell: the retro
+  // visually re-pivots the head around the previous cell, so a wide window
+  // produces a noticeable "snap back" on quick inputs. A narrow window means
+  // any catch-up is tiny/invisible; everything else turns smoothly at the next
+  // grid line (Google-Snake style), which the quick pace keeps responsive.
   function tryRetroTurn(d, now) {
     if (!lastTickSnap || !lastTickSnap.clean) return;
-    if (acc >= stepMs * 0.6) return;
+    if (acc >= stepMs * 0.25) return;
     const pd = lastTickSnap.player.dir;
     if ((d.x === -pd.x && d.y === -pd.y) || (d.x === player.dir.x && d.y === player.dir.y)) return;
     const trial = cloneSim(lastTickSnap.player);
