@@ -1,7 +1,7 @@
 'use strict';
 
 // network-first with cache fallback: always fresh online, playable offline
-const CACHE = 'drift-v7';
+const CACHE = 'drift-v8';
 const ASSETS = [
   './', 'index.html', 'style.css', 'game.js', 'audio.js', 'tracks.js',
   'favicon.svg', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png',

@@ -322,6 +322,11 @@
   let endCause = 'death';     // death | time
   let dirQueue = [];
   let lastTickSnap = null;
+  // when an instant (retro) turn fires, the head's cell changes under it; rather
+  // than teleport, we record the pre-turn→post-turn jump and decay it to zero
+  // over CATCHUP_MS so the head slides smoothly into the new cell (no snap).
+  let headLag = null;            // { dx, dy, t0 } visual-only, never touches the sim
+  const CATCHUP_MS = 80;
   let acc = 0, lastTime = 0, dieAt = 0;
   let particles = [], popups = [], eatRipple = null;
   let ambient = [], ambTimer = 0;
@@ -601,6 +606,7 @@
     particles = []; popups = []; eatRipple = null; lastBonusSecs = null;
     trailDots = []; lastTrailCell = '';
     cameo = null; cameoSeen = false;
+    headLag = null;
     runStats = { fruit: 0, timed: 0, golden: 0 };
     lastTickSnap = null;
     acc = 0;
@@ -701,20 +707,29 @@
 
   // a turn pressed just after a tick still applies to the cell the snake is
   // visually in, as long as the missed tick was eventless and the retro move
-  // doesn't kill the player. Kept to a SMALL slice of the cell: the retro
-  // visually re-pivots the head around the previous cell, so a wide window
-  // produces a noticeable "snap back" on quick inputs. A narrow window means
-  // any catch-up is tiny/invisible; everything else turns smoothly at the next
-  // grid line (Google-Snake style), which the quick pace keeps responsive.
+  // doesn't kill the player. The window is generous (half the cell) so presses
+  // land instantly — the visual "snap" the rewind used to cause is gone because
+  // headLag slides the head into the new cell over CATCHUP_MS instead of
+  // teleporting it. Responsiveness comes from the wide window; smoothness from
+  // the slide. Presses later than this still turn at the next grid line.
   function tryRetroTurn(d, now) {
     if (!lastTickSnap || !lastTickSnap.clean) return;
-    if (acc >= stepMs * 0.25) return;
+    if (acc >= stepMs * 0.5) return;
     const pd = lastTickSnap.player.dir;
     if ((d.x === -pd.x && d.y === -pd.y) || (d.x === player.dir.x && d.y === player.dir.y)) return;
     const trial = cloneSim(lastTickSnap.player);
     const ev = simStep(trial, d);
     if (ev.died) return;
+    const oldDir = player.dir;                 // the tick we're undoing
     player = trial;
+    // the head's cell just changed under it; record the visual jump so the
+    // renderer can slide rather than snap (oldDir vs new dir, scaled by glide t)
+    const tg = Math.min(acc / stepMs, 1);
+    headLag = {
+      dx: (oldDir.x - player.dir.x) * cell * tg,
+      dy: (oldDir.y - player.dir.y) * cell * tg,
+      t0: now,
+    };
     recMoves[recMoves.length - 1] = DIRS.findIndex(x => x.x === player.dir.x && x.y === player.dir.y);
     if (lastTickSnap.ghost && ghost) {
       ghost.sim = lastTickSnap.ghost.sim;
@@ -2543,6 +2558,22 @@
 
   function drawSnakeBody(sim, t, now, isGhost) {
     const { pts, heads, facing } = snakePath(sim, t);
+    // slide the head into its new cell after an instant turn instead of snapping:
+    // full offset on the head, tapering down the neck so the body curves with it
+    if (!isGhost && headLag) {
+      const k = 1 - (now - headLag.t0) / CATCHUP_MS;
+      if (k <= 0) headLag = null;
+      else {
+        const ox = headLag.dx * k, oy = headLag.dy * k;
+        for (const h of heads) { h.x += ox; h.y += oy; }
+        const iv = pts.indexOf(heads[0]);
+        const fall = [0.45, 0.18];
+        for (let j = 0; j < fall.length; j++) {
+          const p = pts[iv + 1 + j];
+          if (p) { p.x += ox * fall[j]; p.y += oy * fall[j]; }
+        }
+      }
+    }
     const segs = splitWrapped(pts);
     const dead = endCause === 'death' &&
       (!sim.alive || ((state === 'dying' || state === 'gameover') && !isGhost));
