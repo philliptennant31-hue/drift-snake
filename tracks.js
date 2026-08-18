@@ -45,6 +45,14 @@ const TRACKS = [
     apple: 'https://music.apple.com/us/album/forget-me-not/1501106939?i=1501107216',
     worlds: ['meadow'],
   },
+  {
+    src: 'music/Bird Bath.mp3',
+    title: 'Bird Bath', artist: 'Purrple Cat',
+    link: 'https://soundcloud.com/purrplecat', license: 'CC BY-SA 3.0',
+    spotify: 'https://open.spotify.com/search/Purrple%20Cat%20Bird%20Bath',
+    apple: 'https://music.apple.com/us/album/bird-bath/1636947085?i=1636947087',
+    worlds: ['meadow'],
+  },
   // midnight
   {
     src: 'music/Crescent Moon.mp3',
@@ -76,6 +84,22 @@ const TRACKS = [
     link: 'https://soundcloud.com/purrplecat', license: 'CC BY-SA 3.0',
     spotify: 'https://open.spotify.com/search/Purrple%20Cat%20Moonlit%20Walk',
     apple: 'https://music.apple.com/us/album/moonlit-walk/6770626212?i=6770626555',
+    worlds: ['midnight'],
+  },
+  {
+    src: 'music/Nightfall.mp3',
+    title: 'Nightfall', artist: 'Purrple Cat',
+    link: 'https://soundcloud.com/purrplecat', license: 'CC BY-SA 3.0',
+    spotify: 'https://open.spotify.com/search/Purrple%20Cat%20Nightfall',
+    apple: 'https://music.apple.com/us/album/nightfall/1708521606?i=1708521766',
+    worlds: ['midnight'],
+  },
+  {
+    src: 'music/Constellations.mp3',
+    title: 'Constellations', artist: 'Purrple Cat',
+    link: 'https://soundcloud.com/purrplecat', license: 'CC BY-SA 3.0',
+    spotify: 'https://open.spotify.com/search/Purrple%20Cat%20Constellations',
+    apple: 'https://music.apple.com/us/album/constellations/1708521606?i=1708521771',
     worlds: ['midnight'],
   },
   // classic — deliberately retro, the one upbeat exception
@@ -161,6 +185,14 @@ const TRACKS = [
     apple: 'https://music.apple.com/us/album/glowing-tides/1708521606?i=1708521612',
     worlds: ['tide'],
   },
+  {
+    src: 'music/Distant Ships.mp3',
+    title: 'Distant Ships', artist: 'Purrple Cat',
+    link: 'https://soundcloud.com/purrplecat', license: 'CC BY-SA 3.0',
+    spotify: 'https://open.spotify.com/search/Purrple%20Cat%20Distant%20Ships',
+    apple: 'https://music.apple.com/us/album/distant-ships/1708521606?i=1708521614',
+    worlds: ['tide'],
+  },
   // autumn
   {
     src: 'music/Golden Hour.mp3',
@@ -192,6 +224,14 @@ const TRACKS = [
     link: 'https://soundcloud.com/purrplecat', license: 'CC BY-SA 3.0',
     spotify: 'https://open.spotify.com/search/Purrple%20Cat%20In%20The%20Past',
     apple: 'https://music.apple.com/us/album/in-the-past/1636947085?i=1636947089',
+    worlds: ['autumn'],
+  },
+  {
+    src: 'music/Timeless.mp3',
+    title: 'Timeless', artist: 'Purrple Cat',
+    link: 'https://soundcloud.com/purrplecat', license: 'CC BY-SA 3.0',
+    spotify: 'https://open.spotify.com/search/Purrple%20Cat%20Timeless',
+    apple: 'https://music.apple.com/us/album/timeless/1615315194?i=1615315204',
     worlds: ['autumn'],
   },
   // mono
