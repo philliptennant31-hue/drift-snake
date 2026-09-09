@@ -18,10 +18,14 @@ Curation bar: nothing faster or busier than *Heart Of The Ocean*.
 | Moonlit Walk | midnight | [Purrple Cat](https://soundcloud.com/purrplecat) | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) |
 | Pixelland | classic | [Kevin MacLeod](https://incompetech.com) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
 | Bit Quest | classic | [Kevin MacLeod](https://incompetech.com) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
+| Wallpaper | classic | [Kevin MacLeod](https://incompetech.com) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
+| Local Forecast – Elevator | classic | [Kevin MacLeod](https://incompetech.com) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
 | Green Tea | sakura | [Purrple Cat](https://soundcloud.com/purrplecat) | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) |
 | Ishikari Lore | sakura | [Kevin MacLeod](https://incompetech.com) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
 | Spring Showers | sakura | [Purrple Cat](https://soundcloud.com/purrplecat) | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) |
 | Earl Grey | sakura | [Purrple Cat](https://soundcloud.com/purrplecat) | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) |
+| Wild Strawberry | sakura | [Purrple Cat](https://soundcloud.com/purrplecat) | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) |
+| Serendipity | sakura | [Purrple Cat](https://soundcloud.com/purrplecat) | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) |
 | Heart Of The Ocean | tide | [Purrple Cat](https://soundcloud.com/purrplecat) | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) |
 | Calm Waters | tide | [Purrple Cat](https://soundcloud.com/purrplecat) | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) |
 | Where The Waves Take Us | tide | [Purrple Cat](https://soundcloud.com/purrplecat) | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) |
@@ -33,6 +37,7 @@ Curation bar: nothing faster or busier than *Heart Of The Ocean*.
 | Gymnopédie No. 1 | mono | Erik Satie, perf. [Kevin MacLeod](https://incompetech.com) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
 | Gymnopédie No. 2 | mono | Erik Satie, perf. [Kevin MacLeod](https://incompetech.com) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
 | Gymnopédie No. 3 | mono | Erik Satie, perf. [Kevin MacLeod](https://incompetech.com) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
+| There Is Romance | mono | [Kevin MacLeod](https://incompetech.com) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
 | Storm Clouds | storm | [Purrple Cat](https://soundcloud.com/purrplecat) | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) |
 | Thunder Nap | storm | [Purrple Cat](https://soundcloud.com/purrplecat) | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) |
 | Rainy Streets | storm | [Purrple Cat](https://soundcloud.com/purrplecat) | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) |
