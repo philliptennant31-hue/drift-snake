@@ -95,6 +95,22 @@ const TRACKS = [
     apple: 'https://music.apple.com/us/album/bit-quest/1887666187?i=1887666190',
     worlds: ['classic'],
   },
+  {
+    src: 'music/Wallpaper.mp3',
+    title: 'Wallpaper', artist: 'Kevin MacLeod',
+    link: 'https://incompetech.com', license: 'CC BY 4.0',
+    spotify: 'https://open.spotify.com/search/Kevin%20MacLeod%20Wallpaper',
+    apple: 'https://music.apple.com/us/album/wallpaper/1887659157?i=1887659390',
+    worlds: ['classic'],
+  },
+  {
+    src: 'music/Local Forecast Elevator.mp3',
+    title: 'Local Forecast – Elevator', artist: 'Kevin MacLeod',
+    link: 'https://incompetech.com', license: 'CC BY 4.0',
+    spotify: 'https://open.spotify.com/search/Kevin%20MacLeod%20Local%20Forecast%20%E2%80%93%20Elevator',
+    apple: 'https://music.apple.com/us/album/local-forecast-elevator/1887672553?i=1887672701',
+    worlds: ['classic'],
+  },
   // sakura
   {
     src: 'music/Green Tea.mp3',
@@ -126,6 +142,22 @@ const TRACKS = [
     link: 'https://soundcloud.com/purrplecat', license: 'CC BY-SA 3.0',
     spotify: 'https://open.spotify.com/search/Purrple%20Cat%20Earl%20Grey',
     apple: 'https://music.apple.com/us/album/earl-grey/1757304523?i=1757304741',
+    worlds: ['sakura'],
+  },
+  {
+    src: 'music/Wild Strawberry.mp3',
+    title: 'Wild Strawberry', artist: 'Purrple Cat',
+    link: 'https://soundcloud.com/purrplecat', license: 'CC BY-SA 3.0',
+    spotify: 'https://open.spotify.com/search/Purrple%20Cat%20Wild%20Strawberry',
+    apple: 'https://music.apple.com/us/album/wild-strawberry/1501106939?i=1501106942',
+    worlds: ['sakura'],
+  },
+  {
+    src: 'music/Serendipity.mp3',
+    title: 'Serendipity', artist: 'Purrple Cat',
+    link: 'https://soundcloud.com/purrplecat', license: 'CC BY-SA 3.0',
+    spotify: 'https://open.spotify.com/search/Purrple%20Cat%20Serendipity',
+    apple: 'https://music.apple.com/us/album/serendipity/1636947085?i=1636947091',
     worlds: ['sakura'],
   },
   // tide — the benchmark
@@ -214,6 +246,13 @@ const TRACKS = [
     title: 'Gymnopédie No. 3', artist: 'Erik Satie, perf. Kevin MacLeod',
     link: 'https://incompetech.com', license: 'CC BY 4.0',
     spotify: 'https://open.spotify.com/search/Kevin%20MacLeod%20Gymnop%C3%A9die%20No.%203',
+    worlds: ['mono'],
+  },
+  {
+    src: 'music/There Is Romance.mp3',
+    title: 'There Is Romance', artist: 'Kevin MacLeod',
+    link: 'https://incompetech.com', license: 'CC BY 4.0',
+    spotify: 'https://open.spotify.com/search/Kevin%20MacLeod%20There%20Is%20Romance',
     worlds: ['mono'],
   },
   // storm
